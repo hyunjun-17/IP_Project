@@ -15,6 +15,7 @@
 	<meta name="_csrf" content="${_csrf.token}"/>
 	<meta name="_csrf_header" content="${_csrf.headerName}"/>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<meta name="username" content="<sec:authentication property='principal.username'/>" />
 </head>
 <body>
 <jsp:include page="../navbar.jsp"/>
@@ -379,7 +380,6 @@
 				position: selectedPosition,
 				questions: selectedQuestions,
 				interviewDate: new Date().toISOString(),
-				videoStatus: null,
 				videoUrl: null,
 				memberId: null
 			};
@@ -812,6 +812,56 @@
 		}
 	}
 
+	async function uploadVideo(blob, questionNumber) {
+		try {
+			if (!blob || blob.size === 0) {
+				throw new Error('녹화된 데이터가 없습니다.');
+			}
+
+			// 현재 로그인한 사용자 이름 가져오기
+			const username = document.querySelector('meta[name="username"]')?.content;
+			if (!username) {
+				throw new Error('사용자 정보를 찾을 수 없습니다.');
+			}
+
+			// 안전한 파일명 생성
+			const fileName = `interview_${username}_q${questionNumber}.webm`;
+
+			const formData = new FormData();
+			const videoFile = new File([blob], fileName, {
+				type: 'video/webm',
+				lastModified: new Date().getTime()
+			});
+
+			formData.append('video', videoFile);
+			formData.append('questionNumber', questionNumber.toString());
+
+			// CSRF 토큰 추가
+			const token = document.querySelector("meta[name='_csrf']").content;
+			const header = document.querySelector("meta[name='_csrf_header']").content;
+
+			const response = await fetch(`/aiboard/api/interview/${username}/video`, {
+				method: 'POST',
+				headers: {
+					[header]: token
+				},
+				body: formData
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('Server response:', errorText);
+				throw new Error(`서버 응답 오류: ${response.status} - ${errorText}`);
+			}
+
+			console.log('Upload successful');
+			return await response.json();
+		} catch (error) {
+			console.error('비디오 업로드 오류:', error);
+			throw error;
+		}
+	}
+
 	function stopRecording() {
 		try {
 			if (!isRecording || !mediaRecorder) {
@@ -833,57 +883,13 @@
 					recordedChunks.push(event.data);
 
 					try {
-						// ID 체크 및 로깅
-						console.log('Current Interview ID before upload:', currentInterviewId);
-
-						if (!currentInterviewId) {
-							console.error('No interview ID available');
-							throw new Error('면접 ID를 찾을 수 없습니다');
-						}
-
 						const blob = new Blob(recordedChunks, { type: 'video/webm' });
 						const currentQuestionNumber = parseInt(
 								document.querySelector('.current-question .question-number strong')
 										.textContent.split(' ')[1]
 						);
 
-						// 디버깅용 로그
-						console.log('Preparing video upload:', {
-							interviewId: currentInterviewId,
-							questionNumber: currentQuestionNumber,
-							blobSize: blob.size
-						});
-
-						const formData = new FormData();
-						// 파일명에 interviewId와 questionNumber 포함
-						const videoFile = new File(
-								[blob],
-								`interview_${currentInterviewId}_q${currentQuestionNumber}.webm`,
-								{ type: 'video/webm' }
-						);
-						formData.append('video', videoFile);
-						formData.append('questionNumber', currentQuestionNumber.toString());
-
-						// URL 구성 (앞뒤 슬래시 정규화)
-						const baseUrl = `/aiboard/api/interview/${currentInterviewId}/video`;
-						const url = baseUrl.replace(/\+/g, '/');
-						console.log('Upload URL:', url);
-
-						const response = await fetch(url, {
-							method: 'POST',
-							body: formData
-						});
-
-						console.log('Response status:', response.status);
-
-						if (!response.ok) {
-							const errorText = await response.text();
-							console.error('Server error response:', errorText);
-							throw new Error(`서버 응답 오류: ${response.status} - ${errorText}`);
-						}
-
-						const result = await response.json();
-						console.log('Upload successful:', result);
+						await uploadVideo(blob, currentQuestionNumber);
 
 						updateTranscriptAnswer(currentQuestionNumber, "답변이 녹화되었습니다.");
 
@@ -908,42 +914,6 @@
 		} catch (error) {
 			console.error('녹화 중지 오류:', error);
 			alert('녹화 중지 중 오류가 발생했습니다.');
-		}
-	}
-
-
-
-	async function uploadRecording() {
-		try {
-			if (recordedChunks.length === 0) {
-				throw new Error('녹화된 데이터가 없습니다.');
-			}
-
-			const blob = new Blob(recordedChunks, {type: 'video/webm'});
-			const formData = new FormData();
-			formData.append('video', blob);
-
-			// Spring Security CSRF 토큰
-			const token = document.querySelector("meta[name='_csrf']").content;
-			const header = document.querySelector("meta[name='_csrf_header']").content;
-
-			const response = await fetch('/aiboard/api/interview/video', {
-				method: 'POST',
-				headers: {
-					[header]: token
-				},
-				body: formData
-			});
-
-			if (!response.ok) {
-				throw new Error('서버 응답 오류: ' + response.status);
-			}
-
-			console.log('업로드 완료');
-
-		} catch (error) {
-			console.error('업로드 오류:', error);
-			alert('녹화 파일 업로드 중 오류가 발생했습니다.');
 		}
 	}
 

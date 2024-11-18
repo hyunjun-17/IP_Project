@@ -22,7 +22,6 @@ public class AIInterviewMapper {
                 .username(dto.getUsername())
                 .position(dto.getPosition())
                 .date(dto.getInterviewDate())
-                .videoStatus(dto.getVideoStatus())  // DTO에서 String으로 받기
                 .url(dto.getVideoUrl())
                 .iproIdx(dto.getMemberId())        // memberId를 iproIdx로 사용
                 .build();
@@ -38,7 +37,6 @@ public class AIInterviewMapper {
                 .username(entity.getUsername())
                 .position(entity.getPosition())
                 .interviewDate(entity.getDate())
-                .videoStatus(entity.getVideoStatus())  // String으로 직접 사용
                 .videoUrl(entity.getUrl())
                 .memberId(entity.getIproIdx())        // iproIdx를 memberId로 사용
                 .build();

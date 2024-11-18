@@ -310,20 +310,32 @@ public class AIBoardController {
         }
     }
 
-    @PostMapping("/api/interview/{id}/video")
+    @PostMapping("/api/interview/{username}/video")
     @ResponseBody
     public ResponseEntity<Map<String, String>> submitVideo(
-            @PathVariable Long id,
+            @PathVariable String username,
             @RequestParam("video") MultipartFile file,
-            @RequestParam("questionNumber") Integer questionNumber) {
+            @RequestParam("questionNumber") Integer questionNumber,
+            Authentication authentication) {
         try {
-            interviewService.submitVideoResponse(id, file, questionNumber);
-            String videoUrl = interviewService.getVideoUrl(id, questionNumber);
-            return ResponseEntity.ok(Map.of("url", videoUrl));
+            // 현재 로그인한 사용자와 요청된 username이 일치하는지 확인
+            if (!authentication.getName().equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Unauthorized access"));
+            }
+
+            // 비디오 업로드 처리
+            String videoUrl = interviewService.submitVideoResponse(username, file, questionNumber);
+
+            return ResponseEntity.ok(Map.of(
+                    "url", videoUrl,
+                    "status", "success",
+                    "message", "Video uploaded successfully"
+            ));
         } catch (Exception e) {
-            log.error("Error uploading video", e);
+            log.error("Error uploading video for user: " + username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to upload video"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 

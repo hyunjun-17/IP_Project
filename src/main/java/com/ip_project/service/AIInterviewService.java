@@ -22,50 +22,45 @@ import java.util.stream.Collectors;
 public class AIInterviewService {
     private final AIInterviewRepository interviewRepository;
     private final AIInterviewMapper interviewMapper;
-    private final VideoStorageService videoStorageService; // 새로운 GCS 서비스
+    private final GoogleCloudVideoService googleCloudVideoService;
     private final JdbcTemplate jdbcTemplate;
-
 
     @Transactional
     public AIInterviewDTO createInterview(AIInterviewDTO dto) {
         AIInterview interview = interviewMapper.toEntity(dto);
-        // status를 String으로 직접 설정
-        interview.setVideoStatus("CREATED");
         interview.setDate(LocalDateTime.now());
-
         AIInterview savedInterview = interviewRepository.save(interview);
         return interviewMapper.toDto(savedInterview);
     }
 
     @Transactional
-    public void submitVideoResponse(Long interviewId, MultipartFile file, Integer questionNumber) {
-        AIInterview interview = interviewRepository.findById(interviewId)
-                .orElseThrow(() -> new EntityNotFoundException("Interview not found with id: " + interviewId));
-
+    public String submitVideoResponse(String username, MultipartFile file, Integer questionNumber) {
         try {
-            // GCS에 비디오 저장
-            String videoUrl = videoStorageService.storeVideo(file, interviewId, questionNumber);
+            AIInterview interview = interviewRepository.findTopByUsernameOrderByDateDesc(username)
+                    .orElseThrow(() -> new EntityNotFoundException("No active interview found for user: " + username));
 
-            // AI_INTERVIEW 테이블의 URL 업데이트
+            // Google Cloud Storage에 비디오 저장
+            String videoUrl = googleCloudVideoService.saveVideo(username, file, interview.getId(), questionNumber);
+
+            // DB 업데이트
             String updateSql = "UPDATE AI_INTERVIEW " +
                     "SET AI_URL = ?, " +
-                    "VIDEO_STATUS = ?, " +
                     "VIDEO_SIZE = ?, " +
                     "VIDEO_FORMAT = ? " +
-                    "WHERE AI_IDX = ?";
+                    "WHERE USERNAME = ? " +
+                    "AND AI_IDX = ?";
 
             jdbcTemplate.update(updateSql,
                     videoUrl,
-                    "SUBMITTED",
                     file.getSize(),
                     file.getContentType(),
-                    interviewId);
+                    username,
+                    interview.getId());
 
-            log.info("Successfully uploaded video for interview {}", interviewId);
-
+            return videoUrl;
         } catch (Exception e) {
-            log.error("Failed to upload video for interview {}", interviewId, e);
-            throw new RuntimeException("Failed to upload video", e);
+            log.error("Failed to upload video for user {} question {}", username, questionNumber, e);
+            throw new RuntimeException("Failed to upload video: " + e.getMessage(), e);
         }
     }
 
@@ -98,7 +93,4 @@ public class AIInterviewService {
         }
         interviewRepository.deleteById(id);
     }
-
-
-
 }

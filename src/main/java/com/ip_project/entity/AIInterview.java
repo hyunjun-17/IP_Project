@@ -32,9 +32,6 @@ public class AIInterview {
     @Column(name = "AI_DATE")
     private LocalDateTime date;
 
-    @Column(name = "VIDEO_STATUS", length = 20)
-    private String videoStatus;
-
     @Column(name = "VIDEO_DURATION", precision = 10)
     private Long videoDuration;
 

@@ -15,7 +15,6 @@ public class AIInterviewDTO {
     private String username;
     private String position;
     private LocalDateTime interviewDate;
-    private String videoStatus;        // Enum 대신 String 사용
     private String videoUrl;
     private Long memberId;             // iproIdx 대신 memberId 사용
     private List<AIQuestionDTO> questions;
