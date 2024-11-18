@@ -31,6 +31,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    // AWS S3
+    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.531')
+    implementation 'com.amazonaws:aws-java-sdk-s3'
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
     // JSP 관련 의존성
     implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
     implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
@@ -39,7 +44,6 @@ dependencies {
     implementation 'org.springframework.security:spring-security-taglibs'
     implementation 'com.oracle.database.jdbc:ojdbc8:21.5.0.0'
 
-
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
@@ -47,9 +51,6 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    implementation 'com.google.cloud:google-cloud-storage:2.22.0'
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
 }
 
 tasks.named('test') {
