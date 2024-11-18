@@ -1,0 +1,2 @@
+2024-11-11 14:12:57,254 - ERROR - DB 연결 실패: DPI-1047: Cannot locate a 64-bit Oracle Client library: "The specified module could not be found". See https://python-oracledb.readthedocs.io/en/latest/user_guide/initialization.html for help
+Help: https://python-oracledb.readthedocs.io/en/latest/user_guide/troubleshooting.html#dpi-1047
