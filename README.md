@@ -35,7 +35,7 @@
 
 
 ### 📌 SW 유스케이스
-![Uploading image.png…]()
+![image](https://github.com/user-attachments/assets/0ab7d692-8acf-4a12-b934-a47b50ef5814)
 
 
 ### 📌 서비스 흐름도
