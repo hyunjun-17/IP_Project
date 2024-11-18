@@ -36,6 +36,7 @@
 
 
 ### 📌 서비스 흐름도
+![image](https://github.com/user-attachments/assets/7f28993e-eb6b-4e25-bf84-8a892a673b51)
 
 
 ### 📌 ER 다이어그램
