@@ -38,14 +38,13 @@ public class AIInterviewService {
     }
 
     @Transactional
-    public String submitVideoResponse(String username, MultipartFile file, Integer questionNumber) {
-        try {
-            // 해당 사용자의 가장 최근 인터뷰 찾기
-            AIInterview interview = interviewRepository.findTopByUsernameOrderByDateDesc(username)
-                    .orElseThrow(() -> new EntityNotFoundException("No active interview found for user: " + username));
+    public void submitVideoResponse(Long interviewId, MultipartFile file, Integer questionNumber) {
+        AIInterview interview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Interview not found with id: " + interviewId));
 
+        try {
             // GCS에 비디오 저장
-            String videoUrl = videoStorageService.storeVideo(file, interview.getId(), questionNumber);
+            String videoUrl = videoStorageService.storeVideo(file, interviewId, questionNumber);
 
             // AI_INTERVIEW 테이블의 URL 업데이트
             String updateSql = "UPDATE AI_INTERVIEW " +
@@ -53,23 +52,20 @@ public class AIInterviewService {
                     "VIDEO_STATUS = ?, " +
                     "VIDEO_SIZE = ?, " +
                     "VIDEO_FORMAT = ? " +
-                    "WHERE USERNAME = ? " +
-                    "AND AI_IDX = ?";
+                    "WHERE AI_IDX = ?";
 
             jdbcTemplate.update(updateSql,
                     videoUrl,
                     "SUBMITTED",
                     file.getSize(),
                     file.getContentType(),
-                    username,
-                    interview.getId());
+                    interviewId);
 
-            log.info("Successfully uploaded video for user {} question {}", username, questionNumber);
+            log.info("Successfully uploaded video for interview {}", interviewId);
 
-            return videoUrl;
         } catch (Exception e) {
-            log.error("Failed to upload video for user {} question {}", username, questionNumber, e);
-            throw new RuntimeException("Failed to upload video: " + e.getMessage(), e);
+            log.error("Failed to upload video for interview {}", interviewId, e);
+            throw new RuntimeException("Failed to upload video", e);
         }
     }
 

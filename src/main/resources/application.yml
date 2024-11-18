@@ -27,8 +27,8 @@ spring:
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
   servlet:
     multipart:
-      max-file-size: 500MB
-      max-request-size: 500MB
+      max-file-size: 100MB
+      max-request-size: 100MB
 file:
   upload:
     directory: uploads/videos
@@ -54,3 +54,7 @@ python:
   script:
     path=C:/Users/USER/Desktop/실전프로젝트/back/IP_Project/Python/interview_generator:
       py:
+
+#video:
+#  storage:
+#    path: ${user.home}/interview_videos

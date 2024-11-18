@@ -15,12 +15,6 @@
 	<meta name="_csrf" content="${_csrf.token}"/>
 	<meta name="_csrf_header" content="${_csrf.headerName}"/>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<sec:authorize access="isAuthenticated()">
-		<meta name="username" content="<sec:authentication property='principal.username'/>" />
-	</sec:authorize>
-	<sec:authorize access="!isAuthenticated()">
-		<meta name="username" content="" />
-	</sec:authorize>
 </head>
 <body>
 <jsp:include page="../navbar.jsp"/>
@@ -235,7 +229,7 @@
 			url: `${pageContext.request.contextPath}/aiboard/loadSelfIntroduction/` + selfIdx,
 			method: 'GET',
 			dataType: 'json',
-			success: function(data) {
+			success: function (data) {
 				username = data.username;
 				const company = data.company;
 				const position = data.position;
@@ -243,10 +237,13 @@
 				const iproQuestions = data.iproQuestions;
 				iproAnswers = data.iproAnswers;
 
+				// iproAnswers가 배열인지 확인하고, 배열이 아니라면 빈 배열로 설정
 				if (!Array.isArray(iproAnswers)) {
 					iproAnswers = [];
 					console.warn('iproAnswers는 배열이 아니므로 빈 배열로 설정되었습니다.');
 				}
+
+				console.log('로드된 iproAnswers:', iproAnswers); // 디버깅용 로그
 
 				selectedPosition = position;
 
@@ -539,12 +536,18 @@
 
 	async function initializeCamera() {
 		try {
+			// 먼저 카메라 권한 상태 확인
+			const permissions = await navigator.permissions.query({name: 'camera'});
+			if (permissions.state === 'denied') {
+				throw new Error('카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 권한을 허용해주세요.');
+			}
+
 			const stream = await navigator.mediaDevices.getUserMedia({
 				video: {
-					width: { ideal: 1280 },
-					height: { ideal: 720 }
+					width: {ideal: 1280},
+					height: {ideal: 720}
 				},
-				audio: true  // 오디오도 포함
+				audio: false
 			});
 
 			const videoContainer = document.querySelector('.video-container');
@@ -556,40 +559,16 @@
 			videoElement.srcObject = stream;
 			videoElement.autoplay = true;
 			videoElement.playsInline = true;
-			videoElement.muted = true;  // 자기 목소리가 들리는 것 방지
+			videoElement.muted = true;
 			videoElement.style.width = '100%';
 			videoElement.style.height = '100%';
 
 			videoContainer.innerHTML = '';
 			videoContainer.appendChild(videoElement);
-
-			// MediaRecorder 초기화
-			mediaRecorder = new MediaRecorder(stream, {
-				mimeType: 'video/webm;codecs=vp8,opus'
-			});
-
-			mediaRecorder.ondataavailable = (event) => {
-				if (event.data && event.data.size > 0) {
-					recordedChunks.push(event.data);
-				}
-			};
-
-			document.getElementById('setupVideoError-1')?.style.display = 'none';
-			console.log('카메라 초기화 완료');
+			document.getElementById('setupVideoError-1').style.display = 'none';
 
 		} catch (error) {
-			console.error('카메라 초기화 오류:', error);
-			const errorId = 'setupVideoError-1';
-			const errorElement = document.getElementById(errorId);
-			if (errorElement) {
-				if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-					errorElement.textContent = '카메라 접근이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.';
-				} else {
-					errorElement.textContent = '카메라 초기화 오류: ' + error.message;
-				}
-				errorElement.style.display = 'block';
-			}
-			throw error;
+			handleCameraError(error, 'setup');
 		}
 	}
 
@@ -612,7 +591,7 @@
 	}
 
 
-// --------------------- 녹화 시작, 저장, 업로드하고 끝 -----------------------------------------------------------
+	// --------------------- 녹화 시작, 저장, 업로드하고 끝 -----------------------------------------------------------
 	async function startVideoRecording() {
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
@@ -727,91 +706,45 @@
 
 	function startRecording() {
 		try {
-			if (!mediaRecorder) {
-				console.error('MediaRecorder가 초기화되지 않았습니다.');
-				return;
+			if (!currentInterviewId) {
+				throw new Error('면접 ID가 설정되지 않았습니다.');
 			}
 
 			const startButton = document.getElementById('interviewStartButton');
 			const stopButton = document.getElementById('interviewStopButton');
-			const recordingIndicator = document.getElementById('interviewRecordingIndicator-2');
+			const videoContainer = document.querySelector('#questionSection .video-container');
+			let recordingIndicator = document.getElementById('interviewRecordingIndicator-2');
+
+			// Create recording indicator if it doesn't exist
+			if (!recordingIndicator && videoContainer) {
+				const newRecordingIndicator = document.createElement('div');
+				newRecordingIndicator.id = 'interviewRecordingIndicator-2';
+				newRecordingIndicator.className = 'recording-indicator';
+				newRecordingIndicator.style.display = 'none';
+				newRecordingIndicator.innerHTML =
+						'<span class="recording-dot"></span>' +
+						'녹화중';
+				videoContainer.appendChild(newRecordingIndicator);
+				recordingIndicator = newRecordingIndicator;
+			}
+
+			if (!mediaRecorder || mediaRecorder.state === 'recording') {
+				throw new Error('MediaRecorder가 준비되지 않았거나 이미 녹화 중입니다.');
+			}
+
+			recordedChunks = [];
 
 			if (startButton) startButton.disabled = true;
 			if (stopButton) stopButton.disabled = false;
 			if (recordingIndicator) recordingIndicator.style.display = 'flex';
 
-			recordedChunks = []; // 새로운 녹화 시작 전 초기화
 			mediaRecorder.start();
 			isRecording = true;
-			console.log('녹화가 시작되었습니다.');
+			console.log('녹화가 시작되었습니다. Interview ID:', currentInterviewId);
 
 		} catch (error) {
 			console.error('녹화 시작 오류:', error);
-			alert('녹화 시작 중 오류가 발생했습니다: ' + error.message);
-		}
-	}
-
-	async function stopRecording() {
-		try {
-			if (!isRecording || !mediaRecorder) {
-				console.error('녹화 중이 아닙니다.');
-				return;
-			}
-
-			// UI 업데이트
-			const startButton = document.getElementById('interviewStartButton');
-			const stopButton = document.getElementById('interviewStopButton');
-			const recordingIndicator = document.getElementById('interviewRecordingIndicator-2');
-
-			if (startButton) startButton.disabled = false;
-			if (stopButton) stopButton.disabled = true;
-			if (recordingIndicator) recordingIndicator.style.display = 'none';
-
-			// 녹화 데이터 수집 완료 대기
-			const recordingData = await new Promise((resolve, reject) => {
-				mediaRecorder.onstop = () => {
-					const blob = new Blob(recordedChunks, { type: 'video/webm' });
-					resolve(blob);
-				};
-
-				mediaRecorder.onerror = (event) => {
-					reject(new Error('MediaRecorder 오류: ' + event.error));
-				};
-
-				mediaRecorder.stop();
-			});
-
-			// 현재 질문 번호 가져오기
-			const currentQuestionText = document.querySelector('.current-question .question-number strong')?.textContent;
-			const currentQuestionNumber = currentQuestionText ?
-					parseInt(currentQuestionText.split(' ')[1]) : null;
-
-			if (!currentQuestionNumber) {
-				throw new Error('현재 질문 번호를 찾을 수 없습니다.');
-			}
-
-			// 비디오 업로드
-			await uploadVideo(recordingData, currentQuestionNumber);
-
-			// 트랜스크립트 업데이트
-			updateTranscriptAnswer(currentQuestionNumber, "답변이 녹화되었습니다.");
-
-			// 다음 질문으로 이동 또는 인터뷰 종료
-			const totalQuestions = document.querySelectorAll('.transcript-item').length;
-			if (currentQuestionNumber < totalQuestions) {
-				updateCurrentQuestion(currentQuestionNumber + 1);
-			} else {
-				await finishInterview();
-			}
-
-			isRecording = false;
-			recordedChunks = [];
-			console.log('녹화가 성공적으로 저장되었습니다.');
-
-		} catch (error) {
-			console.error('녹화 저장 오류:', error);
-			alert('녹화 저장 실패: ' + error.message);
-			isRecording = false;
+			alert('녹화 시작 중 오류가 발생했습니다.: ' + error.message);
 		}
 	}
 
@@ -879,33 +812,122 @@
 		}
 	}
 
-	async function uploadVideo(blob, questionNumber) {
+	function stopRecording() {
 		try {
-			// 사용자 정보 가져오기
-			const username = document.querySelector("meta[name='username']")?.content;
-			if (!username) {
-				throw new Error('사용자 정보를 찾을 수 없습니다.');
+			if (!isRecording || !mediaRecorder) {
+				console.error('녹화 중이 아닙니다.');
+				return;
 			}
 
-			// CSRF 토큰 가져오기
+			const startButton = document.getElementById('interviewStartButton');
+			const stopButton = document.getElementById('interviewStopButton');
+			const recordingIndicator = document.getElementById('interviewRecordingIndicator-2');
+
+			// Update UI
+			if (startButton) startButton.disabled = false;
+			if (stopButton) stopButton.disabled = true;
+			if (recordingIndicator) recordingIndicator.style.display = 'none';
+
+			mediaRecorder.ondataavailable = async (event) => {
+				if (event.data && event.data.size > 0) {
+					recordedChunks.push(event.data);
+
+					try {
+						// ID 체크 및 로깅
+						console.log('Current Interview ID before upload:', currentInterviewId);
+
+						if (!currentInterviewId) {
+							console.error('No interview ID available');
+							throw new Error('면접 ID를 찾을 수 없습니다');
+						}
+
+						const blob = new Blob(recordedChunks, { type: 'video/webm' });
+						const currentQuestionNumber = parseInt(
+								document.querySelector('.current-question .question-number strong')
+										.textContent.split(' ')[1]
+						);
+
+						// 디버깅용 로그
+						console.log('Preparing video upload:', {
+							interviewId: currentInterviewId,
+							questionNumber: currentQuestionNumber,
+							blobSize: blob.size
+						});
+
+						const formData = new FormData();
+						// 파일명에 interviewId와 questionNumber 포함
+						const videoFile = new File(
+								[blob],
+								`interview_${currentInterviewId}_q${currentQuestionNumber}.webm`,
+								{ type: 'video/webm' }
+						);
+						formData.append('video', videoFile);
+						formData.append('questionNumber', currentQuestionNumber.toString());
+
+						// URL 구성 (앞뒤 슬래시 정규화)
+						const baseUrl = `/aiboard/api/interview/${currentInterviewId}/video`;
+						const url = baseUrl.replace(/\+/g, '/');
+						console.log('Upload URL:', url);
+
+						const response = await fetch(url, {
+							method: 'POST',
+							body: formData
+						});
+
+						console.log('Response status:', response.status);
+
+						if (!response.ok) {
+							const errorText = await response.text();
+							console.error('Server error response:', errorText);
+							throw new Error(`서버 응답 오류: ${response.status} - ${errorText}`);
+						}
+
+						const result = await response.json();
+						console.log('Upload successful:', result);
+
+						updateTranscriptAnswer(currentQuestionNumber, "답변이 녹화되었습니다.");
+
+						const totalQuestions = document.querySelectorAll('.transcript-item').length;
+						if (currentQuestionNumber < totalQuestions) {
+							updateCurrentQuestion(currentQuestionNumber + 1);
+						} else {
+							await finishInterview();
+						}
+
+					} catch (error) {
+						console.error('Error saving recording:', error);
+						alert('녹화 파일 저장 중 오류가 발생했습니다: ' + error.message);
+					}
+				}
+			};
+
+			mediaRecorder.stop();
+			isRecording = false;
+			console.log('녹화가 중지되었습니다.');
+
+		} catch (error) {
+			console.error('녹화 중지 오류:', error);
+			alert('녹화 중지 중 오류가 발생했습니다.');
+		}
+	}
+
+
+
+	async function uploadRecording() {
+		try {
+			if (recordedChunks.length === 0) {
+				throw new Error('녹화된 데이터가 없습니다.');
+			}
+
+			const blob = new Blob(recordedChunks, {type: 'video/webm'});
+			const formData = new FormData();
+			formData.append('video', blob);
+
+			// Spring Security CSRF 토큰
 			const token = document.querySelector("meta[name='_csrf']").content;
 			const header = document.querySelector("meta[name='_csrf_header']").content;
 
-			// FormData 구성
-			const formData = new FormData();
-			const safeFileName = `interview_${questionNumber}.webm`;
-			const videoFile = new File([blob], safeFileName, {
-				type: 'video/webm',
-				lastModified: new Date().getTime()
-			});
-
-			formData.append('video', videoFile);
-			formData.append('questionNumber', questionNumber.toString());
-
-			console.log(`업로드 시작: 사용자=${username}, 질문번호=${questionNumber}`);
-
-			// API 호출
-			const response = await fetch(`/aiboard/api/interview/${encodeURIComponent(username)}/video`, {
+			const response = await fetch('/aiboard/api/interview/video', {
 				method: 'POST',
 				headers: {
 					[header]: token
@@ -914,20 +936,16 @@
 			});
 
 			if (!response.ok) {
-				const errorText = await response.text();
-				throw new Error(`서버 응답 오류 (${response.status}): ${errorText}`);
+				throw new Error('서버 응답 오류: ' + response.status);
 			}
 
-			const result = await response.json();
-			console.log('업로드 성공:', result);
-			return result;
+			console.log('업로드 완료');
 
 		} catch (error) {
-			console.error('비디오 업로드 오류:', error);
-			throw new Error(`업로드 실패: ${error.message}`);
+			console.error('업로드 오류:', error);
+			alert('녹화 파일 업로드 중 오류가 발생했습니다.');
 		}
 	}
-
 
 </script>
 
