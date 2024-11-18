@@ -2,8 +2,10 @@ package com.ip_project.controller;
 
 import com.ip_project.dto.SelfIntroductionDTO;
 import com.ip_project.entity.LikeCompany;
+import com.ip_project.entity.Member;
 import com.ip_project.entity.SelfBoard;
 import com.ip_project.entity.SelfIntroduction;
+import com.ip_project.repository.MemberRepository;
 import com.ip_project.service.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class MyPageController {
     private final ReviewService reviewService;
     private final InterviewQuestionService interviewProService;
     private final LikeCompanyService likeCompanyService;
+    private final MemberRepository memberRepository;
 
     @GetMapping("/mypage")
     public String myPage(Model model) {
@@ -147,5 +150,36 @@ public class MyPageController {
         likeCompanyService.removeFavoriteCompany(username, companyIdx);
 
         return "redirect:/mypage/mypage";
+    }
+
+    //자소서 저장
+    @PostMapping("/saveIntroduction")
+    public String saveIntroduction(@ModelAttribute SelfIntroductionDTO selfIntroDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        SelfBoard selfBoard = SelfBoard.builder()
+                .selfCompany(selfIntroDto.getCompany())
+                .selfTitle(selfIntroDto.getTitle())
+                .selfPosition(selfIntroDto.getPosition())
+                .selfDate(LocalDateTime.now())
+                .member(member)
+                .build();
+
+        selfBoardService.save(selfBoard);
+
+        for (int i = 0; i < selfIntroDto.getQuestions().size(); i++) {
+            SelfIntroduction selfIntroduction = SelfIntroduction.builder()
+                    .introQuestion(selfIntroDto.getQuestions().get(i))
+                    .introAnswer(selfIntroDto.getAnswers().get(i))
+                    .selfBoard(selfBoard)
+                    .build();
+            selfIntroductionService.saveSelfIntroduction(selfIntroduction);
+        }
+
+        return "redirect:/mypage/mypageint";
     }
 }
