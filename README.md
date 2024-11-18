@@ -39,7 +39,7 @@
 
 
 ### 📌 ER 다이어그램
-
+![image](https://github.com/user-attachments/assets/53208b13-095c-4c61-bd6f-5587f832187b)
 
 
 ### 🖥 화면 구성
