@@ -1,10 +1,7 @@
 package com.ip_project.controller;
 
 import com.ip_project.dto.SelfIntroductionDTO;
-import com.ip_project.entity.LikeCompany;
-import com.ip_project.entity.Member;
-import com.ip_project.entity.SelfBoard;
-import com.ip_project.entity.SelfIntroduction;
+import com.ip_project.entity.*;
 import com.ip_project.repository.MemberRepository;
 import com.ip_project.service.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,7 +25,7 @@ public class MyPageController {
     private final SelfBoardService selfBoardService;
     private final SelfIntroductionService selfIntroductionService;
     private final ReviewService reviewService;
-    private final InterviewQuestionService interviewProService;
+    private final InterviewQuestionService interviewQuestionService;
     private final LikeCompanyService likeCompanyService;
     private final MemberRepository memberRepository;
 
@@ -39,10 +36,9 @@ public class MyPageController {
         String username = authentication.getName();
 
         // 해당 사용자의 면접 목록 가져오기
-//        model.addAttribute("interviews", interviewService.getInterviewsByUsername(username));
         selfBoardService.listByUsername(model, username);
         reviewService.listByUsername(model, username);
-        interviewProService.listByUsername(model, username);
+        interviewQuestionService.listByUsername(model, username);
 
         return "mypage/mypage";
     }
@@ -88,7 +84,11 @@ public class MyPageController {
     }
 
     @GetMapping("/mypagevid")
-    public String myPageInterview(Model model) {
+    public String myPageInterview(@RequestParam("selfIdx")Long selfIdx, Model model) {
+        // selfIdx를 통해 데이터를 조회
+        List<InterviewPro> interviewProList = interviewQuestionService.getInterviewProBySelfIdx(selfIdx);
+        // 조회한 데이터를 모델에 추가
+        model.addAttribute("ipros", interviewProList);
         return "mypage/mypagevid";
     }
 

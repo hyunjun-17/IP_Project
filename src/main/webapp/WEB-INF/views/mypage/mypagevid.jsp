@@ -49,36 +49,13 @@
 					<div class="col-6">
 						<div class="video-questions">
 							<h4 class="section-title">면접 질문</h4>
+							<c:forEach items="${ipros}" var="ipro" varStatus="status">
 							<div class="question-item">
 								<button class="question-button">
-									<span class="question-number">Q1.</span>CSS적용도
+									<span class="question-number">Q${status.index+1}.</span><c:out value="${ipro.iproQuestion}"/>
 								</button>
 							</div>
-							<div class="question-item">
-								<button class="question-button">
-									<span class="question-number">Q2.</span>제대로
-								</button>
-							</div>
-							<div class="question-item">
-								<button class="question-button">
-									<span class="question-number">Q3.</span>안하고
-								</button>
-							</div>
-							<div class="question-item">
-								<button class="question-button">
-									<span class="question-number">Q4.</span>30분 끙끙대서
-								</button>
-							</div>
-							<div class="question-item">
-								<button class="question-button">
-									<span class="question-number">Q5.</span>만든게
-								</button>
-							</div>
-							<div class="question-item">
-								<button class="question-button">
-									<span class="question-number">Q6.</span>진짜 멍청했네..
-								</button>
-							</div>
+							</c:forEach>
 						</div>
 					</div>
 				</div>
@@ -86,23 +63,15 @@
 				<!-- Answer Section -->
 				<div class="answer-box-info">
 					<h4 class="section-title">사용자 답변</h4>
-					<div class="answer-box" data-question="1">
-						<p>CSS 관련 답변입니다...</p>
-					</div>
-					<div class="answer-box" data-question="2">
-						<p>제대로 관련 답변입니다...</p>
-					</div>
-					<div class="answer-box" data-question="3">
-						<p>안하고 관련 답변입니다...</p>
-					</div>
-					<div class="answer-box" data-question="4">
-						<p>30분 공장대서 관련 답변입니다...</p>
-					</div>
-					<div class="answer-box" data-question="5">
-						<p>만든게 관련 답변입니다...</p>
-					</div>
-					<div class="answer-box" data-question="6">
-						<p>진짜 멍청했네 관련 답변입니다...</p>
+					<c:forEach items="${ipros}" var="ipro" varStatus="status">
+						<div class="answer-box" data-question="${status.index + 1}">
+						<p><c:out value="${ipro.iproAnswer}"/></p>
+						</div>
+					</c:forEach>
+					<div class="d-flex justify-content-end">
+						<button class="btn btn-primary" onclick="editAnswer()">
+							수정하기
+						</button>
 					</div>
 				</div>
 			</div>
@@ -119,15 +88,6 @@
         const mainContent = document.querySelector('.main-content');
         const toggleIcon = videoToggle.querySelector('i');
         const videoClose = document.querySelector('.video-close');
-
-        const dummyAnswers = {
-            '1': '첫 번째 질문에 대한 더미 답변입니다.',
-            '2': '두 번째 질문의 답변이에요.',
-            '3': '세 번째 답변입니다.',
-            '4': '네 번째 질문의 더미 답변이에요.',
-            '5': '다섯 번째 답변입니다.',
-            '6': '여섯 번째 더미 답변이에요.'
-        };
 
         // Show first answer by default
         if (answerBoxes.length > 0) {
@@ -162,22 +122,41 @@
                 const questionNumber = this.querySelector('.question-number').textContent
                     .replace('Q', '').replace('.', '');
 
-                // Update answer text
-                const answerText = dummyAnswers[questionNumber];
-                const answerBox = document.querySelector('.answer-box-info');
-                answerBox.innerHTML =
-                    '<h4 class="section-title">'
-                    + '사용자 답변'
-                    + '</h4>'
-                    + '<div class="answer-box active">'
-                    + '<p>' + answerText + '</p>'
-                    + '</div>'
-                ;
 
+				// Update answer text
+				const answerBox = document.querySelector('.answer-box[data-question="' + questionNumber + '"]');
 
+				// Make sure the element exists before trying to get its content
+				if (answerBox) {
+					// Extract the answer text
+					let answerText = answerBox.querySelector('p').textContent;
+
+					// If the answer text is null or empty, set the default message
+					if (!answerText || answerText.trim() === '') {
+						answerText = '작성한 답변이 없습니다.';  // 답변이 없을 때 표시할 메시지
+					}
+
+					// Find the currently active answer box and make it inactive
+					answerBoxes.forEach(box => box.classList.remove('active'));
+
+					// Add active class to the corresponding answer box
+					answerBox.classList.add('active');
+
+					// Optionally update inner HTML if needed
+					answerBox.innerHTML =
+							'<p>' + answerText + '</p>';
+				}
             });
         });
     });
+
+	function editAnswer(){
+
+	}
+
+	function saveAnswer(){
+
+	}
 </script>
 </body>
 </html>

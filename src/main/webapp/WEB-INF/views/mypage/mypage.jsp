@@ -34,7 +34,7 @@
                         </div>
                         <div class="status-item">
                             <div>AI 면접</div>
-                            <div class="status-number">3</div>
+                            <div class="status-number">${fn:length(interviews)}</div>
                         </div>
                         <div class="status-item">
                             <div>관심 기업</div>
@@ -103,34 +103,23 @@
                                         <th>기업명</th>
                                         <th>지원직무</th>
                                         <th>면접일</th>
-                                        <th>영상면접</th>
+                                        <th>질문내역</th>
                                     </tr>
                                     </thead>
                                     <tbody>
+                                    <c:forEach items="${interviews}" var="interview" varStatus="status">
+                                        <c:if test="${status.index < 3}">
                                     <tr>
-                                        <td>(주)삼성전자</td>
-                                        <td>2024 상반기 신입공채</td>
-                                        <td>${interviews[0].createdAt}</td>
+                                        <td><c:out value="${interview.selfCompany}"/></td>
+                                        <td><c:out value="${interview.selfPosition}"/></td>
+                                        <td>${fn:substring(interview.createdAt, 0, 10)}
+                                            <fmt:formatDate pattern="yyyy-MM-dd HH:mm" value="${date}"/></td>
                                         <td>
-                                            <button class="btn btn-outline-success btn-small">보러가기</button>
+                                            <button onclick="location.href='${pageContext.request.contextPath}/mypage/mypagevid?selfIdx=${interview.selfIdx}'" class="btn btn-outline-success btn-small">보러가기</button>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td>(주)LG전자</td>
-                                        <td>SW 개발자 채용</td>
-                                        <td>2024.04.20</td>
-                                        <td>
-                                            <button class="btn btn-outline-success btn-small">보러가기</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>(주)현대자동차</td>
-                                        <td>IT 시스템 개발</td>
-                                        <td>2024.04.30</td>
-                                        <td>
-                                            <button class="btn btn-outline-success btn-small">보러가기</button>
-                                        </td>
-                                    </tr>
+                                    </c:if>
+                                    </c:forEach>
                                     </tbody>
                                 </table>
                             </div>

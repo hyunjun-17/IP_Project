@@ -1,5 +1,6 @@
 package com.ip_project.service;
 
+import com.ip_project.dto.InterviewSummaryDTO;
 import com.ip_project.entity.InterviewPro;
 import com.ip_project.repository.InterviewProRepository;
 import com.ip_project.repository.SelfBoardRepository;
@@ -33,19 +34,21 @@ public class InterviewQuestionService {
         return jdbcTemplate.update(sql, iproAnswer, iproIdx);
     }
 
-    public void listByUsername(Model model, String username) {
-        List<InterviewPro> interviews = interviewProRepository.findByMemberUsername(username);
-    // 인터뷰에 selfBoard의 기업명과 직무를 추가
-//        for (InterviewPro interview : interviews) {
-//
-//
-//            SelfBoard selfBoard = selfBoardRepository.findById(interview.getSelfIdx()).orElse(null);
-//            if (selfBoard != null) {
-//                interview.setSelfCompany(selfBoard.getSelfCompany()); // 기업명
-//                interview.setSelfPosition(selfBoard.getSelfPosition()); // 직무
-//            }
-//        }
+//    public void listByUsername(Model model, String username) {
+//        List<InterviewPro> interviews = interviewProRepository.findByMemberUsername(username);
+//        model.addAttribute("interviews", interviews);
+//    }
 
-        model.addAttribute("interviews", interviews);
+    public List<InterviewSummaryDTO> getInterviewSummaryDTO(String username) {
+        return interviewProRepository.findInterviewSummaryByUsername(username);
     }
+
+    // Model 객체에 데이터 추가
+    public void listByUsername(Model model, String username) {
+        List<InterviewSummaryDTO> summaries = getInterviewSummaryDTO(username);
+        model.addAttribute("interviews", summaries); // 모델에 데이터 추가
+    }
+
+    public List<InterviewPro> getInterviewProBySelfIdx(Long selfIdx) {
+        return interviewProRepository.findBySelfBoardSelfIdx(selfIdx);}
 }
