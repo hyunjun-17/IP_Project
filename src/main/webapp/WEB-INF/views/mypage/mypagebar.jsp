@@ -38,7 +38,7 @@
     </li>
 
     <li>
-      <a href="<c:url value='${pageContext.request.contextPath}/mypage/mypagevid'/>">
+      <a href="<c:url value='${pageContext.request.contextPath}/mypage/mypagevidlist'/>">
         <i class="fas fa-microchip"></i>
         <span>AI 면접 내역</span>
       </a>

@@ -63,6 +63,9 @@
 				<!-- Answer Section -->
 				<div class="answer-box-info">
 					<h4 class="section-title">사용자 답변</h4>
+					<div class="answer-box" data-question="0">
+						<p>답변을 확인할 질문을 선택해주세요.</p>
+					</div>
 					<c:forEach items="${ipros}" var="ipro" varStatus="status">
 						<div class="answer-box" data-question="${status.index + 1}">
 						<p><c:out value="${ipro.iproAnswer}"/></p>

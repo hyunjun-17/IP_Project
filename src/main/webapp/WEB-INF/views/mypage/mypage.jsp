@@ -91,7 +91,7 @@
                         <div class="custom-card">
                             <div class="card-title d-flex justify-content-between">
                                 AI 면접 내역
-                                <a href="<c:url value='${pageContext.request.contextPath}/mypage/mypagevid'/>"
+                                <a href="<c:url value='${pageContext.request.contextPath}/mypage/mypagevidlist'/>"
                                    style="text-decoration: none; color:gray;">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
