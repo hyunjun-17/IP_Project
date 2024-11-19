@@ -42,6 +42,7 @@
                             </div>
                             <div class="modal-body">
                                 <form id="selfIntroForm" action="${pageContext.request.contextPath}/mypage/saveIntroduction" method="post" onsubmit="return validateForm()">
+                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                     <div class="mb-3">
                                         <label for="selfTitle" class="form-label"><b>자기소개서 작성하기</b></label>
                                         <input type="text" class="form-control" id="selfTitle" name="title"

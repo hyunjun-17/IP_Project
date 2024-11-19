@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="<c:url value='/resources/static/mypage/mypagelist.css'/>">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="_csrf" content="${_csrf.token}" />
+    <meta name="_csrf_header" content="${_csrf.headerName}" />
 </head>
 <body>
 <jsp:include page="../navbar.jsp"/>
@@ -170,8 +172,12 @@
         }
 
 
-        function updateIntroduction() {
-        // 입력된 질문과 답변을 배열로 수집
+    function updateIntroduction() {
+        // CSRF 토큰 가져오기
+        const token = $("meta[name='_csrf']").attr("content");
+        const header = $("meta[name='_csrf_header']").attr("content");
+
+        // 기존 데이터 수집 코드
         const questions = [];
         const answers = [];
         $('.question-input').each(function() {
@@ -181,30 +187,31 @@
             answers.push($(this).val());
         });
 
-        // 제목, 기업, 직무 입력값 추가
-            const title = $('#title').val();
-            const company = $('.info-item').eq(1).find('.info-value').val(); // 기업
-            const position = $('.info-item').eq(0).find('.info-value').val(); // 직무
+        const title = $('#title').val();
+        const company = $('.info-item').eq(1).find('.info-value').val();
+        const position = $('.info-item').eq(0).find('.info-value').val();
 
-            // DTO 객체 생성
-            const selfIntroductionDTO = {
-                idx:${selfIntroduction.idx},
-                title: title,
-                company: company,
-                position: position,
-                questions: questions,
-                answers: answers
-            };
+        const selfIntroductionDTO = {
+            idx: ${selfIntroduction.idx},
+            title: title,
+            company: company,
+            position: position,
+            questions: questions,
+            answers: answers
+        };
 
-        // AJAX 요청
+        // AJAX 요청에 CSRF 토큰 추가
         $.ajax({
             url: '${pageContext.request.contextPath}/mypage/updateIntroduction',
             type: 'POST',
-            contentType: 'application/json', // JSON 형식으로 전송
-            data: JSON.stringify(selfIntroductionDTO), // DTO를 JSON으로 변환
+            contentType: 'application/json',
+            data: JSON.stringify(selfIntroductionDTO),
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(header, token);  // CSRF 토큰 설정
+            },
             success: function(response) {
                 alert('수정 완료!');
-                location.reload(); // 페이지 새로고침
+                location.reload();
             },
             error: function(xhr, status, error) {
                 alert('수정 실패: ' + error);

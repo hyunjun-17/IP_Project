@@ -22,19 +22,33 @@
     <div class="hero-content">
         <h1>기업과 나를 잇는 면접 코칭 AI <br>면접 질문 준비부터 실전 면접 연습까지</h1>
         <p>최고의 면접을 위한<br>가장 똑똑한 방법, IPro</p>
-        <button onclick="location.href='${pageContext.request.contextPath}/aiboard/ai_board'" class="start-button">지금 시작해보세요!</button>
+	    <button class="start-button"><a href="${pageContext.request.contextPath}/aiboard/ai_board">지금 시작해보세요!</a></button>
     </div>
 </section>
 
 <!-- Chat Section -->
 <section class="chat-section">
-    <h2>이런 고민을 하고 계시다면<br>지금 IPro와 함께해 보세요!
-    </h2>
-    <div class="chat-bubbles">
-        <div class="chat-bubble left">"면접 준비는 해야 하는데 어디서부터 시작해야 할지 모르겠어요."</div>
-        <div class="chat-bubble right">"제가 잘 준비하고 있는 건지, 부족한 부분은 무엇인지 알고 싶어요."</div>
-        <div class="chat-bubble left">"실전처럼 연습하고 싶은데 혼자서는 한계가 있어요..."</div>
-    </div>
+	<h2>이런 고민을 하고 계시다면<br>지금 IP:PRO와 함께해 보세요!</h2>
+	<div class="chat-bubbles">
+		<div class="message-container left">
+			<div class="profile-icon">
+				<i class="fas fa-user"></i>
+			</div>
+			<div class="chat-bubble left">"면접 준비는 해야 하는데 어디서부터 시작해야 할지 모르겠어요."</div>
+		</div>
+		<div class="message-container right">
+			<div class="profile-icon">
+				<i class="fas fa-headset"></i>
+			</div>
+			<div class="chat-bubble right">"잘 준비하고 있는 건지, 부족한 부분은 무엇인지 알려드릴께요!"</div>
+		</div>
+		<div class="message-container left">
+			<div class="profile-icon">
+				<i class="fas fa-user"></i>
+			</div>
+			<div class="chat-bubble left">"실전에서 내가 어떤 모습으로 보일지 알게 되었어요!!"</div>
+		</div>
+	</div>
 </section>
 
 <!-- Center Section -->

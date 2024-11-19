@@ -23,6 +23,7 @@
 		</header>
 
 		<form class="form-card" action="/review_board/write" method="post" id="reviewForm">
+			<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" /
 			<div class="metadata-section">
 				<div class="metadata-grid">
 					<div class="input-group">

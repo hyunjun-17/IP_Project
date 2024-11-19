@@ -123,6 +123,7 @@
             <span class="close">&times;</span>
             <form action="${pageContext.request.contextPath}/aiboard/saveIntroduction" method="post"
                   onsubmit="return validateForm()">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                 <div id="questions-container" style="width:95%; padding-left:5%;">
                     <div class="question-block">
                         <table style="width:100%;">
