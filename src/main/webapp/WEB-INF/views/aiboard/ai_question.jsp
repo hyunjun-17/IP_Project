@@ -10,7 +10,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/static/aiboard/ai_question.css">
-
+    <meta name="_csrf" content="${_csrf.token}"/>
+    <meta name="_csrf_header" content="${_csrf.headerName}"/>
 </head>
 <body>
 <jsp:include page="../navbar.jsp"/>
@@ -456,7 +457,8 @@
         fetch("<%= request.getContextPath() %>/aiboard/save_answer", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector("meta[name='_csrf']").getAttribute("content") // CSRF 토큰 추가
             },
             body: JSON.stringify({
                 iproIdx: iproIdx,
