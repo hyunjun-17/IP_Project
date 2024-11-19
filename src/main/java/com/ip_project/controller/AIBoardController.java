@@ -38,8 +38,7 @@ public class AIBoardController {
     private final MemberRepository memberRepository;
     private final InterviewQuestionService questionService;
     private final RestTemplate restTemplate;
-    private final VideoStorageService videoStorageService;
-
+    private final S3VideoService s3VideoService;  // VideoStorageService를 S3VideoService로 변경
 
     private static final String FASTAPI_URL = "http://127.0.0.1:8000/generate-interview";
     private static final String FASTAPI_URL2 = "http://127.0.0.1:8000/feedback-interview";
@@ -310,22 +309,17 @@ public class AIBoardController {
         }
     }
 
-    @PostMapping("/api/interview/{username}/video")
+    @PostMapping("/api/interview/video")
     @ResponseBody
     public ResponseEntity<Map<String, String>> submitVideo(
-            @PathVariable String username,
             @RequestParam("video") MultipartFile file,
             @RequestParam("questionNumber") Integer questionNumber,
+            @RequestParam("selfId") Long selfId,
+            @RequestParam("iproIdx") Long iproIdx,  // interviewId -> iproIdx
             Authentication authentication) {
         try {
-            // 현재 로그인한 사용자와 요청된 username이 일치하는지 확인
-            if (!authentication.getName().equals(username)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "Unauthorized access"));
-            }
-
-            // 비디오 업로드 처리
-            String videoUrl = interviewService.submitVideoResponse(username, file, questionNumber);
+            String username = authentication.getName();
+            String videoUrl = interviewService.submitVideoResponse(username, file, selfId, iproIdx, questionNumber);
 
             return ResponseEntity.ok(Map.of(
                     "url", videoUrl,
@@ -333,7 +327,7 @@ public class AIBoardController {
                     "message", "Video uploaded successfully"
             ));
         } catch (Exception e) {
-            log.error("Error uploading video for user: " + username, e);
+            log.error("Error uploading video: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }

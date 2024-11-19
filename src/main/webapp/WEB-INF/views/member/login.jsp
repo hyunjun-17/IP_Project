@@ -20,10 +20,11 @@
     <div class="login-box">
         <div class="brand-section">
             <img src="<c:url value='/resources/static/img/white.PNG'/>" alt="lgLogo" class="lglogo">
-            <h1 class="login-title">AI 면접의 첫 걸음</h1>
+            <h1 class="login-title">면접의 첫 걸음</h1>
         </div>
 
         <form action="${pageContext.request.contextPath}/member/login-process" method="POST" class="login-form">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
             <div class="input-group">
                 <i class="fas fa-user"></i>
                 <input type="text" name="username" placeholder="아이디를 입력하세요" required>
@@ -78,6 +79,7 @@
     <div id="id-section" class="idpw-section hidden">
         <h2 class="recovery-title">아이디 찾기</h2>
         <form action="${pageContext.request.contextPath}/member/id_recovery" method="POST">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
             <div class="input-group">
                 <i class="fas fa-envelope"></i>
                 <input type="email" name="email" placeholder="이메일을 입력하세요" required>
@@ -89,6 +91,7 @@
     <div id="pw-section" class="idpw-section hidden">
         <h2 class="recovery-title">비밀번호 찾기</h2>
         <form action="${pageContext.request.contextPath}/member/pw_recovery" method="POST">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
             <div class="input-group">
                 <i class="fas fa-user"></i>
                 <input type="text" name="username" placeholder="아이디를 입력하세요" required>

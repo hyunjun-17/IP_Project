@@ -16,6 +16,10 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    // commons-logging 제외 설정 추가
+    all {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
 }
 
 repositories {
@@ -31,10 +35,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    // AWS S3
+    // AWS S3 의존성에서 commons-logging 제외
     implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.531')
-    implementation 'com.amazonaws:aws-java-sdk-s3'
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation('com.amazonaws:aws-java-sdk-s3') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+    implementation('org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
 
     // JSP 관련 의존성
     implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'

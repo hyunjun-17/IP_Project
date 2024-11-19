@@ -43,47 +43,19 @@ public class SecurityConfiguration {
         return (web) -> web.httpFirewall(allowUrlEncodedSlashHttpFirewall());
     }
 
-       /*@Bean
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/resources/**", "/css/**", "/js/**", "/images/**")
+                )  // CSRF 보호 활성화하고 정적 리소스는 제외
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/main", "/error", "/member/login", "/member/join", "/member/checkId",
                                 "/resources/**", "/css/**", "/js/**", "/images/**",
                                 "/WEB-INF/views/**", "/oauth2/**", "/review_board/**" ).permitAll()
                         .requestMatchers("/mypage/**", "/aiboard/**", "/cor_board/**").authenticated()
                         .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/member/login")
-                        .loginProcessingUrl("/member/login-process")
-                        .defaultSuccessUrl("/", true)  // 메인 페이지로 리다이렉트
-                        .failureUrl("/member/login?error=true")
-                        .usernameParameter("username")
-                        .passwordParameter("password")
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/member/login")
-                        .defaultSuccessUrl("/")
-                        .userInfoEndpoint(endpoint -> endpoint
-                                .userService(customOAuth2UserService)
-                        )
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/member/logout")
-                        .logoutSuccessUrl("/")
-                        .invalidateHttpSession(true)
-                );
-
-        return http.build();
-    }*/
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()
                 )
                 .formLogin(form -> form
                         .loginPage("/member/login")
@@ -104,8 +76,6 @@ public class SecurityConfiguration {
                         .logoutUrl("/member/logout")
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                        .deleteCookies("JSESSIONID")
                 );
 
         return http.build();

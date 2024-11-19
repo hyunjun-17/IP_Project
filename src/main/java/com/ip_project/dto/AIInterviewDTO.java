@@ -16,6 +16,8 @@ public class AIInterviewDTO {
     private String position;
     private LocalDateTime interviewDate;
     private String videoUrl;
+    private Long selfId;  // 추가
+    private Integer iproIdx;  // 추가
     private Long memberId;             // iproIdx 대신 memberId 사용
     private List<AIQuestionDTO> questions;
 

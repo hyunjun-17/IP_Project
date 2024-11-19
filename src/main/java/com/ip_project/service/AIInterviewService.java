@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class AIInterviewService {
     private final AIInterviewRepository interviewRepository;
     private final AIInterviewMapper interviewMapper;
-    private final GoogleCloudVideoService googleCloudVideoService;
+    private final S3VideoService s3VideoService;  // S3VideoService 주입 추가
     private final JdbcTemplate jdbcTemplate;
 
     @Transactional
@@ -34,19 +34,18 @@ public class AIInterviewService {
     }
 
     @Transactional
-    public String submitVideoResponse(String username, MultipartFile file, Integer questionNumber) {
+    public String submitVideoResponse(String username, MultipartFile file, Long selfId, Long iproIdx, Integer questionNumber) {
         try {
             AIInterview interview = interviewRepository.findTopByUsernameOrderByDateDesc(username)
                     .orElseThrow(() -> new EntityNotFoundException("No active interview found for user: " + username));
 
-            // Google Cloud Storage에 비디오 저장
-            String videoUrl = googleCloudVideoService.saveVideo(username, file, interview.getId(), questionNumber);
+            String videoUrl = s3VideoService.saveVideo(file, selfId, iproIdx, questionNumber);
 
-            // DB 업데이트
             String updateSql = "UPDATE AI_INTERVIEW " +
                     "SET AI_URL = ?, " +
                     "VIDEO_SIZE = ?, " +
-                    "VIDEO_FORMAT = ? " +
+                    "VIDEO_FORMAT = ?, " +
+                    "IPRO_IDX = ? " +  // IPRO_IDX 추가
                     "WHERE USERNAME = ? " +
                     "AND AI_IDX = ?";
 
@@ -54,12 +53,13 @@ public class AIInterviewService {
                     videoUrl,
                     file.getSize(),
                     file.getContentType(),
+                    iproIdx,    // IPRO_IDX 값 추가
                     username,
                     interview.getId());
 
             return videoUrl;
         } catch (Exception e) {
-            log.error("Failed to upload video for user {} question {}", username, questionNumber, e);
+            log.error("Failed to upload video", e);
             throw new RuntimeException("Failed to upload video: " + e.getMessage(), e);
         }
     }
