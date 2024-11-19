@@ -48,7 +48,8 @@
 
 
 ### 🖥 화면 구성
-![image](https://github.com/user-attachments/assets/a1ca966e-c90b-497d-b75e-58cf72107c48)
+![KakaoTalk_20241119_141557535](https://github.com/user-attachments/assets/eeedcff9-29ca-42f1-bce5-486e678ef586)
+
 
 ### 🤾‍♂️ 트러블슈팅
 
