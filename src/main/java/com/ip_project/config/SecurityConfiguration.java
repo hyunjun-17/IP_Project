@@ -53,7 +53,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/main", "/error", "/member/login", "/member/join", "/member/checkId",
                                 "/resources/**", "/css/**", "/js/**", "/images/**",
-                                "/WEB-INF/views/**", "/oauth2/**", "/review_board/**" ).permitAll()
+                                "/WEB-INF/views/**", "/oauth2/**", "/review_board/**", "/aiboard/ai_board", "/company/corpmain", "/review_board/review_list", "/notice/noticeboard").permitAll()
                         .requestMatchers("/mypage/**", "/aiboard/**", "/cor_board/**").authenticated()
                         .anyRequest().authenticated()
                 )
