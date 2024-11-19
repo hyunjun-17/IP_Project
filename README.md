@@ -30,7 +30,8 @@
 | 인프라 구조     |  <img src="https://img.shields.io/badge/Google Cloud-569A31?style=for-the-badge&logo=Google-Cloud&logoColor=white">|
 
 ### ⚙ 시스템 아키텍처
-![image](https://github.com/user-attachments/assets/3a4b047a-a657-4cfc-aa5d-1d95df9625d9)
+![image](https://github.com/user-attachments/assets/8ae65d51-c1a1-45a2-9790-e53b5645be03)
+
 
 
 
