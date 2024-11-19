@@ -6,6 +6,7 @@ import com.ip_project.repository.MemberRepository;
 import com.ip_project.service.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,6 +42,16 @@ public class MyPageController {
         interviewQuestionService.listByUsername(model, username);
 
         return "mypage/mypage";
+    }
+
+    @GetMapping("/mypagevidlist")
+    public String myPagevidlist(Model model) {
+        // 현재 로그인한 사용자의 username 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        interviewQuestionService.listByUsername(model, username);
+        return "mypage/mypagevidlist";
     }
 
     @PostMapping("/updateIntroduction")

@@ -25,7 +25,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="page-header">
                     <sec:authentication property="principal.member.name"/>님의 AI 면접 내역
-                    <span class="header-badge">(총 ${fn:length(ipros)}건)</span>
+                    <span class="header-badge">(총 ${fn:length(interviews)}건)</span>
                 </h2>
             </div>
 

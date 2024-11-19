@@ -91,6 +91,7 @@
         const mainContent = document.querySelector('.main-content');
         const toggleIcon = videoToggle.querySelector('i');
         const videoClose = document.querySelector('.video-close');
+		const video = document.getElementById('interviewVideo');
 
         // Show first answer by default
         if (answerBoxes.length > 0) {
@@ -122,9 +123,11 @@
                 this.classList.add('active');
 
                 // Get question number
-                const questionNumber = this.querySelector('.question-number').textContent
-                    .replace('Q', '').replace('.', '');
-
+				const questionNumber = this.querySelector('.question-number').textContent
+						.replace('Q', '').replace('.', '');
+				const iproIdx = this.getAttribute('data-ipro-idx'); // IPRO_IDX 가져오기
+				video.src = `/interview-videos/interview_${selfIdx}_${iproIdx}.webm`;
+				video.load();
 
 				// Update answer text
 				const answerBox = document.querySelector('.answer-box[data-question="' + questionNumber + '"]');
