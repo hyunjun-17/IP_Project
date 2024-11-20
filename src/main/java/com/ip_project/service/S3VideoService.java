@@ -24,9 +24,10 @@ public class S3VideoService {
     public String saveVideo(MultipartFile file, Long selfId, Long iproIdx) throws IOException {
         try {
             String fileName = String.format("interviews/%d_%d.webm", selfId, iproIdx);
+            log.info("Saving video: {} (size: {} bytes)", fileName, file.getSize());
 
             ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(file.getContentType());
+            metadata.setContentType("video/webm");  // 명시적으로 content type 지정
             metadata.setContentLength(file.getSize());
 
             PutObjectRequest putObjectRequest = new PutObjectRequest(
@@ -37,9 +38,10 @@ public class S3VideoService {
             );
 
             amazonS3.putObject(putObjectRequest);
+            String url = amazonS3.getUrl(bucket, fileName).toString();
+            log.info("Successfully uploaded video to {}", url);
 
-            return amazonS3.getUrl(bucket, fileName).toString();
-
+            return url;
         } catch (IOException e) {
             log.error("Failed to save video file to S3: {}", e.getMessage());
             throw new IOException("Could not store video file in S3", e);

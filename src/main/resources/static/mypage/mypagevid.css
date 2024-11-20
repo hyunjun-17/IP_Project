@@ -2,10 +2,15 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+	display: none;
 }
 
 body {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 	line-height: 1.6;
 	color: #333;
 	background-color: #f5f5f5;
@@ -46,36 +51,7 @@ body {
 	min-width: 300px;
 }
 
-/* Video Toggle Button */
-.video-toggle {
-	position: fixed;
-	right: 20px;
-	bottom: 20px;
-	background-color: #4a90e2;
-	color: white;
-	border: none;
-	border-radius: 50%;
-	width: 60px;
-	height: 60px;
-	cursor: pointer;
-	z-index: 1000;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-	transition: all 0.3s ease;
-}
-
-.video-toggle i {
-	font-size: 24px;    /* 아이콘 크기 증가 */
-}
-
-
-.video-toggle:hover {
-	background-color: #357abd;
-}
-
-/* Video section */
+/* Video Section Styles */
 .video-section {
 	position: fixed;
 	right: -90vw;
@@ -92,7 +68,6 @@ body {
 	overflow-y: auto;
 }
 
-
 .video-section.active {
 	transform: translateX(-90vw);
 }
@@ -102,8 +77,9 @@ body {
 	border-radius: 12px;
 	padding: 1rem;
 	margin-bottom: 2rem;
-	height: calc(100vh - 200px); /* Taller video container */
+	height: calc(100vh - 200px);
 }
+
 .video-box {
 	display: block;
 	background-color: #f8f9fa;
@@ -112,6 +88,13 @@ body {
 	height: 100%;
 	overflow: hidden;
 }
+
+#interviewVideo {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
 .video-close {
 	position: absolute;
 	top: 20px;
@@ -123,20 +106,15 @@ body {
 	color: #4a5568;
 	width: 40px;
 	height: 40px;
-	display: flex; /* 'none' 대신 'flex' 사용 */
+	display: flex;
 	align-items: center;
 	justify-content: center;
 	border-radius: 50%;
 	transition: background-color 0.2s ease;
 	z-index: 1001;
 }
-#interviewVideo {
-	width: 100%;
-	height: 100%;
-	object-fit: contain;
-}
 
-/* Questions section */
+/* Questions Section */
 .video-questions {
 	background-color: white;
 	border-radius: 12px;
@@ -153,6 +131,7 @@ body {
 
 .question-item {
 	margin-bottom: 1rem;
+	position: relative;
 }
 
 .question-button {
@@ -165,6 +144,9 @@ body {
 	cursor: pointer;
 	transition: all 0.2s ease;
 	font-size: 0.95rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 
 .question-button:hover {
@@ -178,13 +160,39 @@ body {
 	border-left: 4px solid #4a90e2;
 }
 
+.question-content {
+	flex-grow: 1;
+}
+
 .question-number {
 	font-weight: 600;
 	color: #4a5568;
 	margin-right: 0.5rem;
 }
 
-/* Answer section */
+/* Video Button */
+.video-button {
+	background-color: #4a90e2;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	padding: 0.5rem;
+	margin-left: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	transition: all 0.3s ease;
+}
+
+.video-button:hover {
+	background-color: #357abd;
+}
+
+.video-button i {
+	font-size: 1rem;
+}
+
+/* Answer Section */
 .answer-box-info {
 	background-color: white;
 	border-radius: 12px;
@@ -205,48 +213,34 @@ body {
 	display: block;
 }
 
-/* Responsive design */
+/* Responsive Design */
 @media (max-width: 768px) {
 	.video-section {
 		width: 100%;
 		right: -100%;
 	}
-	
+
 	.main-content.video-active {
 		margin-right: 0;
 	}
-	
-	.main-content.video-active {
-		margin-right: 0;
-	}
-	
-	.video-toggle {
-		right: 10px;
-	}
-	
+
 	.row {
 		flex-direction: column;
 	}
-	
+
 	.col-6 {
 		width: 100%;
 	}
-	
+
 	.main-content {
 		padding-top: 60px;
 	}
-	
+
 	.mypcontent {
 		padding: 50px 20px;
 	}
-}
 
-/* Hide scrollbar but keep functionality */
-::-webkit-scrollbar {
-	display: none;
-}
-
-* {
-	-ms-overflow-style: none;
-	scrollbar-width: none;
+	.question-button.active {
+		margin-right: 0;
+	}
 }
