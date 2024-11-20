@@ -7,6 +7,7 @@ import com.ip_project.service.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,7 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/mypage")
@@ -32,16 +36,75 @@ public class MyPageController {
 
     @GetMapping("/mypage")
     public String myPage(Model model) {
-        // 현재 로그인한 사용자의 username 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        try {
+            // 현재 로그인한 사용자의 username 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
 
-        // 해당 사용자의 면접 목록 가져오기
-        selfBoardService.listByUsername(model, username);
-        reviewService.listByUsername(model, username);
-        interviewQuestionService.listByUsername(model, username);
+            // 해당 사용자의 면접 목록 가져오기
+            selfBoardService.listByUsername(model, username);
+            reviewService.listByUsername(model, username);
+            interviewQuestionService.listByUsername(model, username);
 
-        return "mypage/mypage";
+            return "mypage/mypage";
+        } catch (Exception e) {
+            // 에러 로깅
+            e.printStackTrace();
+            model.addAttribute("error", "페이지를 로드하는 중 오류가 발생했습니다.");
+            return "error/error";
+        }
+    }
+
+    @RestController
+    @RequestMapping("/api/mypage")
+    @RequiredArgsConstructor
+    public static class MyPageApiController {
+        private final InterviewQuestionService interviewQuestionService;
+
+        @GetMapping("/interview-videos/{selfIdx}")
+        public ResponseEntity<List<Map<String, Object>>> getInterviewVideos(@PathVariable Long selfIdx) {
+            try {
+                List<InterviewPro> questions = interviewQuestionService.getInterviewProBySelfIdx(selfIdx);
+
+                List<Map<String, Object>> videoInfo = questions.stream()
+                        .map(q -> {
+                            Map<String, Object> info = new HashMap<>();
+                            info.put("questionNumber", q.getIproIdx());
+                            info.put("question", q.getIproQuestion());
+                            info.put("answer", q.getIproAnswer());
+                            String videoUrl = String.format("/interview-videos/interview_%d_%d.webm",
+                                    selfIdx, q.getIproIdx());
+                            info.put("videoUrl", videoUrl);
+                            return info;
+                        })
+                        .collect(Collectors.toList());
+
+                return ResponseEntity.ok(videoInfo);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+    }
+
+    @GetMapping("/interview-videos/{selfIdx}")
+    public ResponseEntity<List<Map<String, Object>>> getInterviewVideos(@PathVariable Long selfIdx) {
+        List<InterviewPro> questions = interviewQuestionService.getInterviewProBySelfIdx(selfIdx);
+
+        List<Map<String, Object>> videoInfo = questions.stream()
+                .map(q -> {
+                    Map<String, Object> info = new HashMap<>();
+                    info.put("questionNumber", q.getIproIdx());
+                    info.put("question", q.getIproQuestion());
+                    info.put("answer", q.getIproAnswer());
+                    // S3에서의 비디오 URL 생성
+                    String videoUrl = String.format("/interview-videos/interview_%d_%d_%d.webm",
+                            selfIdx, q.getIproIdx());
+                    info.put("videoUrl", videoUrl);
+                    return info;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(videoInfo);
     }
 
     @GetMapping("/mypagevidlist")
