@@ -11,7 +11,7 @@ comm2 <br>
 aiboardcontroller - > ai_question 경로 변경 해야함
 
 24.11.11
-interview_server.py 실행 
+interview_server.py 실행
 python -m uvicorn interview_server:app --reload
 
 가상환경

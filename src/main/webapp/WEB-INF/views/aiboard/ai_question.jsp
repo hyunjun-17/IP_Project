@@ -380,45 +380,46 @@
     // 각 질문에 대한 피드백을 저장할 객체
     const feedbacks = {};
     // AI 피드백 받기 버튼 클릭 시 ------------------------------------------------------------------
+    // AI 피드백 받기 버튼 클릭 시
     document.getElementById('feedback-btn').addEventListener('click', function () {
         const answer = document.getElementById('answer').value;
-        const feedbackBox = document.querySelector('.box2'); // 피드백 박스
-        const container = document.querySelector('.container2'); // 피드백 컨테이너
+        const feedbackBox = document.querySelector('.box2');
+        const container = document.querySelector('.container2');
 
-        // 답변이 비어있는지 확인
         if (!answer.trim()) {
             alert("답변을 작성해주세요.");
-
-            // 답변을 작성하지 않은 상태에서 box2를 숨기기
-            feedbackBox.classList.remove('show'); // box2 숨기기
-            container.classList.remove('centered'); // box2 위치 조정 제거
-            return; // 피드백 요청을 중지
+            feedbackBox.classList.remove('show');
+            container.classList.remove('centered');
+            return;
         }
 
-        // 작성된 답변과 selfIdx 값 추출
         const fullQuestion = document.getElementById('question-content').textContent;
         const question = fullQuestion.replace(/^질문\d+\.\s*/, '');
-        const selfIdx = "${param.selfIdx}";  // JSP에서 selfIdx 값 추출 (컨트롤러에서 전달된 값)
-        const isJobQuestion = questions[currentIndex].type; // 직무 질문 여부
+        const selfIdx = "${param.selfIdx}";
+        const isJobQuestion = questions[currentIndex].type;
 
-        // ajax 요청 보내기
+        // CSRF 토큰 가져오기
+        const token = document.querySelector("meta[name='_csrf']").content;
+        const header = document.querySelector("meta[name='_csrf_header']").content;
+
+        // ajax 요청에 CSRF 토큰 추가
         $.ajax({
-            type: "POST",  // 요청 방식
-            url: "/aiboard/ai_feedback",  // 컨트롤러의 엔드포인트
+            type: "POST",
+            url: "/aiboard/ai_feedback",
             contentType: "application/json",
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(header, token);  // CSRF 토큰 헤더 설정
+            },
             data: JSON.stringify({
                 question: question,
                 answer: answer,
-                self_idx: selfIdx,  // selfIdx 값도 함께 보내기
-                isJobQuestion: isJobQuestion  // 기업/직무 여부
+                self_idx: selfIdx,
+                isJobQuestion: isJobQuestion
             }),
             success: function(response) {
-                // 서버에서 응답이 성공적으로 오면 처리
                 console.log("피드백 받기 성공:", response);
-                // 피드백을 'feedbacks' 객체에 저장
-                feedbacks[currentIndex] = response;  // 현재 질문에 대한 피드백 저장
+                feedbacks[currentIndex] = response;
 
-                // 응답받은 피드백을 'AI 피드백' 영역에 표시
                 const feedbackPanel = document.querySelector('.panel');
                 const formattedResponse = response
                     .split('\n')
@@ -428,19 +429,17 @@
                 feedbackPanel.innerHTML =
                     "<div class='feedback-content'> <div class='feedback-text' style='white-space: pre-line; line-height: 1.6;'>" + formattedResponse + "</div></div>";
 
-
                 feedbackBox.classList.add('show');
                 container.classList.add('centered');
             },
             error: function(xhr, status, error) {
-                        // 오류 발생 시 처리
-                        console.error("피드백 받기 실패:" + error);
-                        console.error("상태 코드:", xhr.status);
-                        console.error("응답 텍스트:", xhr.responseText);
-                        alert("AI 피드백 요청에 실패했습니다.");
-                    }
-                });
-            });
+                console.error("피드백 받기 실패:" + error);
+                console.error("상태 코드:", xhr.status);
+                console.error("응답 텍스트:", xhr.responseText);
+                alert("AI 피드백 요청에 실패했습니다.");
+            }
+        });
+    });
 
     document.getElementById('save-answer').addEventListener('click', function () {
         // 현재 질문의 iproIdx와 사용자가 입력한 답변을 가져오기

@@ -15,4 +15,4 @@ oracledb
 fastapi
 uvicorn
 pydantic
-
+dotenv
