@@ -32,14 +32,14 @@ public class AIInterviewService {
         AIInterview savedInterview = interviewRepository.save(interview);
         return interviewMapper.toDto(savedInterview);
     }
-
+    // s3 저장
     @Transactional
     public String submitVideoResponse(String username, MultipartFile file, Long selfId, Long iproIdx, Integer questionNumber) {
         try {
             AIInterview interview = interviewRepository.findTopByUsernameOrderByDateDesc(username)
                     .orElseThrow(() -> new EntityNotFoundException("No active interview found for user: " + username));
 
-            String videoUrl = s3VideoService.saveVideo(file, selfId, iproIdx, questionNumber);
+            String videoUrl = s3VideoService.saveVideo(file, selfId, iproIdx);
 
             String updateSql = "UPDATE AI_INTERVIEW " +
                     "SET AI_URL = ?, " +
