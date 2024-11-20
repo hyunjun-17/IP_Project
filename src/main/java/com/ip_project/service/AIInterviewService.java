@@ -64,6 +64,7 @@ public class AIInterviewService {
         }
     }
 
+
     @Transactional(readOnly = true)
     public String getVideoUrl(Long interviewId, Integer questionNumber) {
         String sql = "SELECT AI_URL FROM AI_INTERVIEW WHERE AI_IDX = TO_NUMBER(?)";
