@@ -616,49 +616,73 @@
 
     async function startRecording() {
         try {
-            // 이전 mediaRecorder 정리 (기존 코드 유지)
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            // 이전 mediaRecorder 정리를 더 안전하게
+            if (mediaRecorder) {
                 try {
-                    mediaRecorder.stop();
-                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                    if (mediaRecorder.stream) {
+                        mediaRecorder.stream.getTracks().forEach(track => {
+                            track.stop();
+                            mediaRecorder.stream.removeTrack(track);
+                        });
+                    }
                 } catch (e) {
                     console.log('Previous mediaRecorder cleanup error:', e);
                 }
             }
 
-            // 새로운 스트림과 mediaRecorder 초기화 (기존 코드 유지)
+            // 스트림 설정 강화
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
-                    frameRate: { ideal: 30 }
+                    frameRate: { ideal: 30 },
+                    facingMode: 'user'
                 },
                 audio: {
                     echoCancellation: true,
                     noiseSuppression: true,
-                    sampleRate: 44100,
-                    channelCount: 2
+                    autoGainControl: true,
+                    sampleRate: 48000,
+                    channelCount: 2,
+                    latency: 0
                 }
             });
 
-            // MediaRecorder 설정 (기존 코드 유지)
+            // 브라우저 호환성 체크 강화
             let options;
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-                options = {
-                    mimeType: 'video/webm;codecs=vp8,opus',
-                    videoBitsPerSecond: 2500000,
-                    audioBitsPerSecond: 128000
-                };
-            } else {
-                throw new Error('Browser does not support vp8/opus encoding');
+            const supportedMimeTypes = [
+                'video/webm;codecs=vp8,opus',
+                'video/webm;codecs=h264,opus',
+                'video/webm'
+            ];
+
+            for (const mimeType of supportedMimeTypes) {
+                if (MediaRecorder.isTypeSupported(mimeType)) {
+                    options = {
+                        mimeType: mimeType,
+                        videoBitsPerSecond: 2500000,
+                        audioBitsPerSecond: 128000
+                    };
+                    console.log('Using MIME type:', mimeType);
+                    break;
+                }
+            }
+
+            if (!options) {
+                throw new Error('No supported video codec found');
             }
 
             mediaRecorder = new MediaRecorder(stream, options);
+            console.log('MediaRecorder state:', mediaRecorder.state);
+            console.log('MediaRecorder options:', options);
 
+            // UI 업데이트는 동일하게 유지
             const container = document.querySelector('#questionSection .video-container');
-            container.innerHTML = ''; // 컨테이너 초기화
+            container.innerHTML = '';
 
-            // 녹화 표시기 생성 및 추가 (기존 코드 유지)
             const recordingIndicator = document.createElement('div');
             recordingIndicator.id = 'interviewRecordingIndicator-2';
             recordingIndicator.className = 'recording-indicator';
@@ -668,34 +692,44 @@
         `;
             container.appendChild(recordingIndicator);
 
-            // 비디오 엘리먼트 생성 및 추가 (기존 코드 유지)
             const videoElement = document.createElement('video');
             videoElement.srcObject = stream;
             videoElement.autoplay = true;
             videoElement.playsInline = true;
+            videoElement.muted = true; // 피드백 방지
             videoElement.style.width = '100%';
             videoElement.style.height = '100%';
             container.appendChild(videoElement);
 
-            // UI 업데이트 (기존 코드 유지)
+            // 버튼 상태 업데이트
             const startButton = document.getElementById('interviewStartButton');
             const stopButton = document.getElementById('interviewStopButton');
             if (startButton) startButton.disabled = true;
             if (stopButton) stopButton.disabled = false;
             recordingIndicator.style.display = 'flex';
 
-            // 데이터 수신 이벤트 설정 (기존 코드 유지)
+            // 데이터 수집 강화
+            recordedChunks = [];
+            let totalSize = 0;
+
             mediaRecorder.ondataavailable = (event) => {
-                console.log('데이터 청크 수신:', event.data.size);
                 if (event.data && event.data.size > 0) {
                     recordedChunks.push(event.data);
+                    totalSize += event.data.size;
+                    console.log(`데이터 청크 수신: ${event.data.size} bytes, 총 크기: ${totalSize} bytes`);
                 }
             };
 
-            // 녹화 시작
-            recordedChunks = [];
-            mediaRecorder.start(1000);
+            // 에러 핸들링 추가
+            mediaRecorder.onerror = (event) => {
+                console.error('MediaRecorder error:', event.error);
+                alert('녹화 중 오류가 발생했습니다. 다시 시도해주세요.');
+            };
+
+            // 더 작은 시간 간격으로 데이터 수집 (안정성 향상)
+            mediaRecorder.start(500);
             isRecording = true;
+            console.log('Recording started');
 
         } catch (error) {
             console.error('녹화 시작 오류:', error);
@@ -718,35 +752,41 @@
         if (recordingIndicator) recordingIndicator.style.display = 'none';
 
         return new Promise((resolve, reject) => {
-            const chunks = [];
-
-            mediaRecorder.ondataavailable = event => {
-                if (event.data && event.data.size > 0) {
-                    chunks.push(event.data);
-                }
-            };
+            let finalBlob = null;
 
             mediaRecorder.onstop = async () => {
                 try {
-                    const blob = new Blob(chunks, {
-                        type: 'video/webm;codecs=vp8,opus'
+                    console.log('Recorded chunks:', recordedChunks.length);
+                    console.log('Total size before blob creation:',
+                        recordedChunks.reduce((total, chunk) => total + chunk.size, 0));
+
+                    finalBlob = new Blob(recordedChunks, {
+                        type: mediaRecorder.mimeType || 'video/webm;codecs=vp8,opus'
                     });
 
-                    // Blob 사이즈 체크 (기존 코드 유지)
-                    console.log('Recorded video size:', blob.size, 'bytes');
+                    console.log('Final blob size:', finalBlob.size);
+                    console.log('Final blob type:', finalBlob.type);
 
-                    if (blob.size === 0) {
-                        throw new Error('녹화된 데이터가 없습니다.');
+                    if (finalBlob.size < 1000) { // 최소 1KB
+                        throw new Error('녹화된 데이터가 너무 작습니다.');
                     }
 
+                    // 파일 이름에 타임스탬프 추가
+                    const timestamp = new Date().getTime();
+                    const fileName = `interview_${selfId}_${iproIdx}_${timestamp}.webm`;
+
                     const formData = new FormData();
-                    formData.append('video', new File([blob], `interview_${selfId}_${iproIdx}.webm`, {
-                        type: 'video/webm',
+                    formData.append('video', new File([finalBlob], fileName, {
+                        type: finalBlob.type,
                         lastModified: Date.now()
                     }));
                     formData.append('questionNumber', currentQuestionNumber.toString());
                     formData.append('selfId', selfId.toString());
                     formData.append('iproIdx', iproIdx.toString());
+
+                    // 업로드 전 최종 확인
+                    console.log('Uploading file:', fileName);
+                    console.log('FormData entries:', Array.from(formData.entries()));
 
                     const token = document.querySelector("meta[name='_csrf']").content;
                     const header = document.querySelector("meta[name='_csrf_header']").content;
@@ -755,6 +795,7 @@
                         throw new Error('CSRF 토큰을 찾을 수 없습니다.');
                     }
 
+                    // 업로드 요청 전송
                     const response = await fetch('/aiboard/api/interview/video', {
                         method: 'POST',
                         headers: {
@@ -764,31 +805,40 @@
                     });
 
                     if (!response.ok) {
-                        throw new Error(`서버 응답 오류: ${response.status}`);
+                        const errorText = await response.text();
+                        throw new Error(`서버 응답 오류: ${response.status}, ${errorText}`);
                     }
 
                     const result = await response.json();
+                    console.log('Upload success:', result);
+
+                    // 후처리
                     updateTranscriptAnswer(currentQuestionNumber, "답변이 녹화되었습니다.");
 
                     const totalQuestions = document.querySelectorAll('.transcript-item').length;
-
                     if (currentQuestionNumber < totalQuestions) {
                         updateCurrentQuestion(currentQuestionNumber + 1);
                     } else {
-                        const questionSection = document.getElementById('questionSection');
-                        const endingSection = document.getElementById('endingSection');
-                        if (questionSection) questionSection.classList.add('hidden');
-                        if (endingSection) endingSection.classList.remove('hidden');
+                        finishInterview();
                     }
 
                     resolve(result);
+
                 } catch (error) {
-                    console.error('Recording stop error details:', error);
-                    console.error('DOM state:', {
-                        currentQuestion: document.querySelector('.current-question')?.innerHTML,
-                        transcriptItems: document.querySelectorAll('.transcript-item')?.length
+                    console.error('Recording stop error:', error);
+                    console.error('Error details:', {
+                        blobSize: finalBlob?.size,
+                        blobType: finalBlob?.type,
+                        recordedChunks: recordedChunks.length,
+                        currentQuestion: currentQuestionNumber
                     });
+                    alert('녹화 저장 중 오류가 발생했습니다: ' + error.message);
                     reject(error);
+                } finally {
+                    // 리소스 정리
+                    if (mediaRecorder.stream) {
+                        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    }
                 }
             };
 
@@ -796,6 +846,7 @@
                 mediaRecorder.stop();
                 isRecording = false;
             } catch (error) {
+                console.error('Error stopping recording:', error);
                 reject(error);
             }
         });
