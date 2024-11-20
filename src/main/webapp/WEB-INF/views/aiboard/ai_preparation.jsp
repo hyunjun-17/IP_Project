@@ -423,12 +423,15 @@
 
     function updateCurrentQuestion(questionNumber) {
         console.log('Updating to question number:', questionNumber);
-        updateQuestionIndex(questionNumber);  // iproIdx 업데이트
 
         const transcriptItems = document.querySelectorAll('.transcript-item');
         const targetItem = transcriptItems[questionNumber - 1];
 
         if (targetItem) {
+            // 현재 질문의 iproIdx 업데이트
+            iproIdx = targetItem.getAttribute('data-ipro-idx');
+            currentQuestionNumber = questionNumber;
+
             // 이전에 확장된 항목들 축소
             transcriptItems.forEach(item => item.classList.remove('expanded'));
             // 현재 항목 확장
@@ -613,7 +616,7 @@
 
     async function startRecording() {
         try {
-            // 이전 mediaRecorder 정리
+            // 이전 mediaRecorder 정리 (기존 코드 유지)
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                 try {
                     mediaRecorder.stop();
@@ -623,7 +626,7 @@
                 }
             }
 
-            // 새로운 스트림과 mediaRecorder 초기화
+            // 새로운 스트림과 mediaRecorder 초기화 (기존 코드 유지)
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 1280 },
@@ -638,7 +641,7 @@
                 }
             });
 
-            // MediaRecorder 설정
+            // MediaRecorder 설정 (기존 코드 유지)
             let options;
             if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
                 options = {
@@ -650,18 +653,12 @@
                 throw new Error('Browser does not support vp8/opus encoding');
             }
 
-            // 기존 MediaRecorder 정리
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            }
-
             mediaRecorder = new MediaRecorder(stream, options);
 
             const container = document.querySelector('#questionSection .video-container');
             container.innerHTML = ''; // 컨테이너 초기화
 
-            // 녹화 표시기 생성 및 추가
+            // 녹화 표시기 생성 및 추가 (기존 코드 유지)
             const recordingIndicator = document.createElement('div');
             recordingIndicator.id = 'interviewRecordingIndicator-2';
             recordingIndicator.className = 'recording-indicator';
@@ -671,7 +668,7 @@
         `;
             container.appendChild(recordingIndicator);
 
-            // 비디오 엘리먼트 생성 및 추가
+            // 비디오 엘리먼트 생성 및 추가 (기존 코드 유지)
             const videoElement = document.createElement('video');
             videoElement.srcObject = stream;
             videoElement.autoplay = true;
@@ -680,14 +677,14 @@
             videoElement.style.height = '100%';
             container.appendChild(videoElement);
 
-            // UI 업데이트
+            // UI 업데이트 (기존 코드 유지)
             const startButton = document.getElementById('interviewStartButton');
             const stopButton = document.getElementById('interviewStopButton');
             if (startButton) startButton.disabled = true;
             if (stopButton) stopButton.disabled = false;
             recordingIndicator.style.display = 'flex';
 
-            // 데이터 수신 이벤트 설정
+            // 데이터 수신 이벤트 설정 (기존 코드 유지)
             mediaRecorder.ondataavailable = (event) => {
                 console.log('데이터 청크 수신:', event.data.size);
                 if (event.data && event.data.size > 0) {
@@ -735,7 +732,7 @@
                         type: 'video/webm;codecs=vp8,opus'
                     });
 
-                    // Blob 사이즈 체크
+                    // Blob 사이즈 체크 (기존 코드 유지)
                     console.log('Recorded video size:', blob.size, 'bytes');
 
                     if (blob.size === 0) {
@@ -749,7 +746,7 @@
                     }));
                     formData.append('questionNumber', currentQuestionNumber.toString());
                     formData.append('selfId', selfId.toString());
-                    formData.append('iproIdx', iproIdx.toString());  // 실제 iproIdx 사용
+                    formData.append('iproIdx', iproIdx.toString());
 
                     const token = document.querySelector("meta[name='_csrf']").content;
                     const header = document.querySelector("meta[name='_csrf_header']").content;
