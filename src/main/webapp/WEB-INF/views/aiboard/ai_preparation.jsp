@@ -442,6 +442,13 @@
         let tableHtml = '<div class="table-responsive"><table class="table"><tbody>';
 
         selectedQuestions.forEach((question, index) => {
+            // 디버깅을 위한 로그 추가
+            console.log('Adding question:', {
+                index: index + 1,
+                iproIdx: question.iproIdx,
+                content: question.content
+            });
+
             tableHtml += '<tr class="transcript-item" ' +
                 'data-question-number="' + (index + 1) + '" ' +
                 'data-ipro-idx="' + question.iproIdx + '" ' +
@@ -456,7 +463,17 @@
         tableHtml += '</tbody></table></div>';
         transcriptList.innerHTML = tableHtml;
 
-        console.log('Created transcript items:', document.querySelectorAll('.transcript-item').length);
+        // 생성 후 확인을 위한 디버깅 로그
+        const createdItems = document.querySelectorAll('.transcript-item');
+        console.log('Created transcript items:', {
+            count: createdItems.length,
+            items: Array.from(createdItems).map(item => ({
+                number: item.getAttribute('data-question-number'),
+                iproIdx: item.getAttribute('data-ipro-idx'),
+                question: item.querySelector('.transcript-question')?.textContent
+            }))
+        });
+
         setupTranscriptItemListeners();
     }
 
@@ -726,22 +743,35 @@
             mediaRecorder.onstop = async () => {
                 try {
                     const blob = new Blob(chunks, { type: 'video/webm' });
-                    const currentQuestionElement = document.querySelector('.current-question .question-number strong');
+                    const currentQuestionElement = document.querySelector('.question-number strong');
 
                     if (!currentQuestionElement) {
                         throw new Error('질문 번호 엘리먼트를 찾을 수 없습니다.');
                     }
 
                     const currentQuestionNumber = parseInt(currentQuestionElement.textContent.split(' ')[1]);
+                    console.log('Looking for question number:', currentQuestionNumber);
 
-                    // iproList에서 현재 질문 번호에 해당하는 iproIdx 찾기
-                    const selectedQuestion = iproList[currentQuestionNumber - 1];
-                    if (!selectedQuestion) {
-                        throw new Error('선택된 질문을 찾을 수 없습니다.');
+                    // 모든 transcript items 출력
+                    const allItems = document.querySelectorAll('.transcript-item');
+                    console.log('Available transcript items:', Array.from(allItems).map(item => ({
+                        number: item.getAttribute('data-question-number'),
+                        iproIdx: item.getAttribute('data-ipro-idx')
+                    })));
+
+                    const currentTranscriptItem = Array.from(allItems)
+                        .find(item => parseInt(item.getAttribute('data-question-number')) === currentQuestionNumber);
+
+                    if (!currentTranscriptItem) {
+                        throw new Error(`현재 질문 항목(${currentQuestionNumber})을 찾을 수 없습니다.`);
                     }
 
-                    const iproIdx = selectedQuestion.iproIdx;
-                    console.log('Using iproIdx:', iproIdx); // 디버깅용
+                    const iproIdx = currentTranscriptItem.getAttribute('data-ipro-idx');
+                    console.log('Found item:', {
+                        questionNumber: currentQuestionNumber,
+                        iproIdx: iproIdx
+                    });
+
 
                     const formData = new FormData();
                     formData.append('video', new File([blob], `interview_${selfId}_${iproIdx}.webm`, {

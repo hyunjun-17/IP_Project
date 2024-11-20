@@ -41,6 +41,7 @@
                 <a href="#"><img src="<c:url value='/resources/static/img/bell.svg'/>" alt="bell" class="bell"></a>
                 <a href="#"><img src="<c:url value='/resources/static/img/profile.svg'/>" alt="profile" class="profile"></a>
                 <form action="${pageContext.request.contextPath}/member/logout" method="post" class="logout-form">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                     <button type="submit" class="logout-btn">
                         <img src="<c:url value='/resources/static/img/logout.svg'/>" alt="logout" >
                     </button>
