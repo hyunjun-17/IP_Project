@@ -36,7 +36,7 @@ public class AIBoardController {
     private final SelfIntroductionService selfIntroductionService;
     private final SelfBoardService selfBoardService;
     private final MemberRepository memberRepository;
-    private final InterviewQuestionService questionService;
+    private final InterviewQuestionService interviewQuestionService;
     private final RestTemplate restTemplate;
     private final S3VideoService s3VideoService;  // VideoStorageService를 S3VideoService로 변경
 
@@ -54,7 +54,7 @@ public class AIBoardController {
         }
 
         try {
-            int rowsAffected = questionService.saveAnswer(iproIdx, iproAnswer);
+            int rowsAffected = interviewQuestionService.saveAnswer(iproIdx, iproAnswer);
             if (rowsAffected > 0) {
                 return ResponseEntity.ok("답변을 저장하였습니다");
             } else {
@@ -122,17 +122,29 @@ public class AIBoardController {
             // SelfIntroductionDTO 생성
             SelfIntroductionDTO dto = selfIntroductionService.getSelfIntroductions(selfBoard);
 
-            // IPRO_QUESTION 및 IPRO_ANSWER 조회
-            List<Map<String, Object>> iproData = questionService.getQuestionsBySelfIdx(idx);
-            if (iproData != null && !iproData.isEmpty()) {
-                List<String> questions = iproData.stream()
-                        .map(q -> (String) q.get("IPRO_QUESTION"))
+            // InterviewPro 데이터 조회
+            List<InterviewPro> iproList = interviewQuestionService.getInterviewProBySelfIdx(idx);
+            // 로그 추가
+            log.debug("Fetched InterviewPro list: {}", iproList);
+
+            if (!iproList.isEmpty()) {
+                dto.setIproList(iproList); // InterviewPro 전체 객체 리스트 설정
+
+                // 질문과 답변 리스트 설정
+                List<String> questions = iproList.stream()
+                        .map(InterviewPro::getIproQuestion)
                         .collect(Collectors.toList());
-                List<String> answers = iproData.stream()
-                        .map(a -> (String) a.get("IPRO_ANSWER"))
+
+                List<String> answers = iproList.stream()
+                        .map(InterviewPro::getIproAnswer)
                         .collect(Collectors.toList());
+
                 dto.setIproQuestions(questions);
                 dto.setIproAnswers(answers);
+
+                // 로그 추가
+                log.debug("Set questions: {}", questions);
+                log.debug("Set answers: {}", answers);
             }
 
             return ResponseEntity.ok(dto);
@@ -164,7 +176,7 @@ public class AIBoardController {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 // 새로 생성된 질문 조회
-                List<Map<String, Object>> questions = questionService.getQuestionsBySelfIdx(selfIdx);
+                List<Map<String, Object>> questions = interviewQuestionService.getQuestionsBySelfIdx(selfIdx);
                 if (questions != null && !questions.isEmpty()) {
                     model.addAttribute("questions", questions);
                     return "aiboard/ai_makequestion";
@@ -250,7 +262,7 @@ public class AIBoardController {
         try {
             // selfIdx가 있는 경우 해당 selfIdx의 질문을 가져옵니다.
             if (selfIdx != null) {
-                List<Map<String, Object>> questions = questionService.getQuestionsBySelfIdx(selfIdx);
+                List<Map<String, Object>> questions = interviewQuestionService.getQuestionsBySelfIdx(selfIdx);
                 model.addAttribute("questions", questions);
                 model.addAttribute("selfIdx", selfIdx);
             } else {
@@ -268,7 +280,7 @@ public class AIBoardController {
     public String aiCheck(@RequestParam(name="selfIdx", required = false) Long selfIdx, Model model) {
         try {
             if (selfIdx != null) {
-                List<Map<String, Object>> questions = questionService.getQuestionsBySelfIdx(selfIdx);
+                List<Map<String, Object>> questions = interviewQuestionService.getQuestionsBySelfIdx(selfIdx);
                 System.out.println("Loaded questions: " + questions); // 임시로 콘솔에 출력
                 model.addAttribute("questions", questions);
                 model.addAttribute("selfIdx", selfIdx);

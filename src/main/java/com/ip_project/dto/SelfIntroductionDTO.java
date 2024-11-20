@@ -1,5 +1,6 @@
 package com.ip_project.dto;
 
+import com.ip_project.entity.InterviewPro;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -19,4 +20,6 @@ public class SelfIntroductionDTO {
     private List<String> answers;  // 답변 목록
     private List<String> iproQuestions;  // AI 면접 예상 질문 목록
     private List<String> iproAnswers;
+    private List<InterviewPro> iproList;
+    private String username;
 }

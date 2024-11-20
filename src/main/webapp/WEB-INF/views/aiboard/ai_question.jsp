@@ -69,9 +69,9 @@
                         <td><span id="state5">미작성</span></td>
                     </tr>
                     <tr>
-                    <td><a href="#" onclick="showQuestion(5)">질문6</a></td>
-                    <td><span id="state6">미작성</span></td>
-                </tr>
+                        <td><a href="#" onclick="showQuestion(5)">질문6</a></td>
+                        <td><span id="state6">미작성</span></td>
+                    </tr>
                 </table>
             </div>
         </div>
@@ -91,12 +91,16 @@
                         </tr>
                         <tr>
                             <td id="charCount">0자/1000자(공백포함)</td>
-                        <td style="text-align:right;">
-                            <div class="buttons">
-                            <button type="button" id="save-answer" class="btn btn-dark">답변 저장하기</button>
-                            <button type="button" id="feedback-btn" class="btn btn-dark">AI 피드백 받기</button>
-                            </div>
-                        </td>
+                            <td style="text-align:right;">
+                                <div class="buttons">
+                                    <button type="button" id="save-answer" class="btn btn-dark">답변 저장하기</button>
+                                    <button type="button" id="feedback-btn" class="btn btn-dark">AI 피드백 받기</button>
+                                </div>
+                                <div class="spinner-overlay" id="spinner-overlay" style="display: none;">
+                                    <div class="spinner"></div>
+                                    <span style="color:white;"> 답변 분석 중....</span>
+                                </div>
+                            </td>
                         </tr> <!-- 글자 수를 표시할 영역 -->
                     </table>
                 </form>
@@ -115,13 +119,13 @@
                 <div class="panel" style="max-height: 500px; background-color: white; border: 1px solid #dedede;">
                     <p>이곳에 표시될 내용입니다. 클릭 시 이 내용이 보이거나 숨겨집니다.</p>
                 </div>
-<%--                <button class="accordion" style="background-color: #242222; color: white;">피드백 적용 답변</button>--%>
-<%--                <div class="panel" style="max-height: 500px; background-color: white; border: 1px solid #dedede;">--%>
-<%--                    <p>다른 내용을 여기에 표시할 수 있습니다. 여러 개의 아코디언을 만들 수 있습니다.</p>--%>
-<%--                    <div class="buttons">--%>
-<%--                        <button class="btn btn-warning" style="margin:10px;">AI 피드백 적용</button>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
+                <%--                <button class="accordion" style="background-color: #242222; color: white;">피드백 적용 답변</button>--%>
+                <%--                <div class="panel" style="max-height: 500px; background-color: white; border: 1px solid #dedede;">--%>
+                <%--                    <p>다른 내용을 여기에 표시할 수 있습니다. 여러 개의 아코디언을 만들 수 있습니다.</p>--%>
+                <%--                    <div class="buttons">--%>
+                <%--                        <button class="btn btn-warning" style="margin:10px;">AI 피드백 적용</button>--%>
+                <%--                    </div>--%>
+                <%--                </div>--%>
             </div>
         </div>
 
@@ -129,14 +133,28 @@
         <script>
             // AI 피드백 받기 버튼을 클릭했을 때 box2를 부드럽게 나타내기
             document.getElementById('feedback-btn').addEventListener('click', function () {
-                var feedbackBox = document.querySelector('.box2');
-                var container = document.querySelector('.container2'); // container를 여기서 정의
+                const feedbackBox = document.querySelector('.box2');
+                const container = document.querySelector('.container2'); // container를 여기서 정의
+                const spinnerOverlay = document.getElementById('spinner-overlay');
 
                 // 항상 보이게만 하고 숨기지는 않음
-                if (!feedbackBox.classList.contains('show')) {
+                // if (!feedbackBox.classList.contains('show')) {
+                //     feedbackBox.classList.add('show');
+                //     container.classList.add('centered');
+                // }
+
+                // 스피너 보이기
+                spinnerOverlay.style.display = 'flex';
+
+                // 요청 보내기 (예시로 setTimeout 사용)
+                setTimeout(() => {
+                    // 요청 완료 후 처리
                     feedbackBox.classList.add('show');
                     container.classList.add('centered');
-                }
+
+                    // 스피너 숨기기
+                    spinnerOverlay.style.display = 'none';
+                }, 3000); // 실제 요청의 응답 시간에 따라 수정
             });
 
             function updateQuestionState(index, state) {

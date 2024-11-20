@@ -21,9 +21,9 @@ public class S3VideoService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public String saveVideo(MultipartFile file, Long selfId, Long iproIdx, Integer questionNumber) throws IOException {
+    public String saveVideo(MultipartFile file, Long selfId, Long iproIdx) throws IOException {
         try {
-            String fileName = String.format("interviews/%d_%d_%d.webm", selfId, iproIdx, questionNumber);
+            String fileName = String.format("interviews/%d_%d.webm", selfId, iproIdx);
 
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(file.getContentType());
