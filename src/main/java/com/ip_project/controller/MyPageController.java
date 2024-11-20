@@ -88,23 +88,29 @@ public class MyPageController {
 
     @GetMapping("/interview-videos/{selfIdx}")
     public ResponseEntity<List<Map<String, Object>>> getInterviewVideos(@PathVariable Long selfIdx) {
-        List<InterviewPro> questions = interviewQuestionService.getInterviewProBySelfIdx(selfIdx);
+        try {
+            List<InterviewPro> questions = interviewQuestionService.getInterviewProBySelfIdx(selfIdx);
 
-        List<Map<String, Object>> videoInfo = questions.stream()
-                .map(q -> {
-                    Map<String, Object> info = new HashMap<>();
-                    info.put("questionNumber", q.getIproIdx());
-                    info.put("question", q.getIproQuestion());
-                    info.put("answer", q.getIproAnswer());
-                    // S3에서의 비디오 URL 생성
-                    String videoUrl = String.format("/interview-videos/interview_%d_%d_%d.webm",
-                            selfIdx, q.getIproIdx());
-                    info.put("videoUrl", videoUrl);
-                    return info;
-                })
-                .collect(Collectors.toList());
+            List<Map<String, Object>> videoInfo = questions.stream()
+                    .map(q -> {
+                        Map<String, Object> info = new HashMap<>();
+                        info.put("questionNumber", q.getIproIdx());
+                        info.put("question", q.getIproQuestion());
+                        info.put("answer", q.getIproAnswer());
 
-        return ResponseEntity.ok(videoInfo);
+                        // S3 URL 생성
+                        String videoUrl = String.format("https://iproproject.s3.ap-southeast-2.amazonaws.com/interviews/%d_%d.webm",
+                                selfIdx, q.getIproIdx());
+                        info.put("videoUrl", videoUrl);
+
+                        return info;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(videoInfo);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/mypagevidlist")
@@ -158,11 +164,17 @@ public class MyPageController {
     }
 
     @GetMapping("/mypagevid")
-    public String myPageInterview(@RequestParam("selfIdx")Long selfIdx, Model model) {
+    public String myPageInterview(@RequestParam("selfIdx") Long selfIdx, Model model) {
         // selfIdx를 통해 데이터를 조회
         List<InterviewPro> interviewProList = interviewQuestionService.getInterviewProBySelfIdx(selfIdx);
+
         // 조회한 데이터를 모델에 추가
         model.addAttribute("ipros", interviewProList);
+        model.addAttribute("selfIdx", selfIdx);  // selfIdx 추가
+
+        // S3 기본 URL 추가
+        model.addAttribute("s3BaseUrl", "https://iproproject.s3.ap-southeast-2.amazonaws.com/interviews/");
+
         return "mypage/mypagevid";
     }
 
