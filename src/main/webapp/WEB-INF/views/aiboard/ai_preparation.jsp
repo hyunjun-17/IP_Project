@@ -30,6 +30,7 @@
                         <h5>면접 환경 설정</h5>
                         <p><sec:authentication property="principal.member.name"/>님 영상 면접을 진행할 자기소개서와 질문을 선택해주세요.</p>
                     </div>
+
                     <div class="video-container">
                         <!-- Video placeholder -->
                     </div>
@@ -42,6 +43,7 @@
                         </svg>
                         카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.
                     </div>
+
                 </div>
             </div>
             <!-- Right section: Settings -->
@@ -78,13 +80,15 @@
                             <p class="question-content">회사를 선택한 이유는 무엇인가요?</p>
                         </div>
                     </div>
+
                     <div class="video-container">
-                        <!-- Video placeholder -->
                         <div id="interviewRecordingIndicator-2" class="recording-indicator" style="display: none;">
                             <span class="recording-dot"></span>
                             녹화중
                         </div>
+                        <!-- Video placeholder -->
                     </div>
+
                     <div id="interviewVideoError-2" class="video-error" style="display: none;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2">
@@ -94,6 +98,7 @@
                         </svg>
                         카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.
                     </div>
+
                     <div class="recording-controls">
                         <button id="interviewStartButton" onclick="startRecording()" class="btn-record start">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -442,13 +447,6 @@
         let tableHtml = '<div class="table-responsive"><table class="table"><tbody>';
 
         selectedQuestions.forEach((question, index) => {
-            // 디버깅을 위한 로그 추가
-            console.log('Adding question:', {
-                index: index + 1,
-                iproIdx: question.iproIdx,
-                content: question.content
-            });
-
             tableHtml += '<tr class="transcript-item" ' +
                 'data-question-number="' + (index + 1) + '" ' +
                 'data-ipro-idx="' + question.iproIdx + '" ' +
@@ -463,17 +461,7 @@
         tableHtml += '</tbody></table></div>';
         transcriptList.innerHTML = tableHtml;
 
-        // 생성 후 확인을 위한 디버깅 로그
-        const createdItems = document.querySelectorAll('.transcript-item');
-        console.log('Created transcript items:', {
-            count: createdItems.length,
-            items: Array.from(createdItems).map(item => ({
-                number: item.getAttribute('data-question-number'),
-                iproIdx: item.getAttribute('data-ipro-idx'),
-                question: item.querySelector('.transcript-question')?.textContent
-            }))
-        });
-
+        console.log('Created transcript items:', document.querySelectorAll('.transcript-item').length);
         setupTranscriptItemListeners();
     }
 
@@ -685,6 +673,7 @@
                     }
                 };
 
+                //비디오 엘리먼트 추가
                 const videoElement = document.createElement('video');
                 videoElement.srcObject = stream;
                 videoElement.autoplay = true;
@@ -693,18 +682,30 @@
                 videoElement.style.height = '100%';
 
                 const container = document.querySelector('#questionSection .video-container');
-                container.innerHTML = '';
-                container.appendChild(videoElement);
+                container.innerHTML = '';  // 기존 비디오 콘텐츠 삭제
+                container.appendChild(videoElement);  // 새 비디오 콘텐츠 추가
             }
+
+            // 녹화 표시기 생성
+            const recordingIndicator = document.createElement('div');
+            recordingIndicator.id = 'interviewRecordingIndicator-2';
+            recordingIndicator.classList.add('recording-indicator');
+            recordingIndicator.style.display = 'none';  // 기본적으로 숨김
+            recordingIndicator.innerHTML = '<span class="recording-dot"></span> 녹화중';
+
+            // video-container 안에 녹화 표시기 추가
+            const container = document.querySelector('#questionSection .video-container');
+            container.appendChild(recordingIndicator);
 
             // UI 업데이트
             const startButton = document.getElementById('interviewStartButton');
             const stopButton = document.getElementById('interviewStopButton');
-            const recordingIndicator = document.getElementById('interviewRecordingIndicator-2');
-
             if (startButton) startButton.disabled = true;
             if (stopButton) stopButton.disabled = false;
-            if (recordingIndicator) recordingIndicator.style.display = 'flex';
+
+            // 녹화 표시기 활성화
+            recordingIndicator.style.display = 'flex';  // flex로 표시
+            console.log('녹화 시작 표시기 활성화됨');
 
             // 녹화 시작
             recordedChunks = [];
@@ -743,35 +744,22 @@
             mediaRecorder.onstop = async () => {
                 try {
                     const blob = new Blob(chunks, { type: 'video/webm' });
-                    const currentQuestionElement = document.querySelector('.question-number strong');
+                    const currentQuestionElement = document.querySelector('.current-question .question-number strong');
 
                     if (!currentQuestionElement) {
                         throw new Error('질문 번호 엘리먼트를 찾을 수 없습니다.');
                     }
 
                     const currentQuestionNumber = parseInt(currentQuestionElement.textContent.split(' ')[1]);
-                    console.log('Looking for question number:', currentQuestionNumber);
 
-                    // 모든 transcript items 출력
-                    const allItems = document.querySelectorAll('.transcript-item');
-                    console.log('Available transcript items:', Array.from(allItems).map(item => ({
-                        number: item.getAttribute('data-question-number'),
-                        iproIdx: item.getAttribute('data-ipro-idx')
-                    })));
-
-                    const currentTranscriptItem = Array.from(allItems)
-                        .find(item => parseInt(item.getAttribute('data-question-number')) === currentQuestionNumber);
-
-                    if (!currentTranscriptItem) {
-                        throw new Error(`현재 질문 항목(${currentQuestionNumber})을 찾을 수 없습니다.`);
+                    // iproList에서 현재 질문 번호에 해당하는 iproIdx 찾기
+                    const selectedQuestion = iproList[currentQuestionNumber - 1];
+                    if (!selectedQuestion) {
+                        throw new Error('선택된 질문을 찾을 수 없습니다.');
                     }
 
-                    const iproIdx = currentTranscriptItem.getAttribute('data-ipro-idx');
-                    console.log('Found item:', {
-                        questionNumber: currentQuestionNumber,
-                        iproIdx: iproIdx
-                    });
-
+                    const iproIdx = selectedQuestion.iproIdx;
+                    console.log('Using iproIdx:', iproIdx); // 디버깅용
 
                     const formData = new FormData();
                     formData.append('video', new File([blob], `interview_${selfId}_${iproIdx}.webm`, {
