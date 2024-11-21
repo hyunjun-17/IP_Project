@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="<c:url value='/resources/static/company/corp.css'/>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
+    <meta name="_csrf" content="${_csrf.token}"/>
+    <meta name="_csrf_header" content="${_csrf.headerName}"/>
 </head>
 <body>
 <jsp:include page="../navbar.jsp"/>
@@ -199,33 +200,32 @@
 
         // 좋아요 버튼 클릭 시 관심 기업 등록/해제 AJAX 요청
         $('#likeButton').click(function() {
-            // 버튼에서 companyIdx 값을 가져옵니다.
             const companyIdx = $(this).data('company-idx');
+            const csrfToken = $("meta[name='_csrf']").attr("content");
+            const csrfHeader = $("meta[name='_csrf_header']").attr("content");
 
             if (!companyIdx) {
                 alert('회사 정보를 찾을 수 없습니다.');
                 return;
             }
 
-            // AJAX 요청 (POST 방식)
             fetch('/company/toggle-like', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken  // CSRF 토큰을 헤더에 추가
                 },
                 body: JSON.stringify({ companyIdx: companyIdx })
             })
                 .then(response => response.text())
                 .then(data => {
-                    alert(data); // 결과 메시지를 alert로 표시
-
-                    // 좋아요 상태를 변경합니다.
+                    alert(data);
                     $(this).toggleClass('liked');
                     const icon = $(this).find('i');
                     if ($(this).hasClass('liked')) {
-                        icon.removeClass('bi-heart').addClass('bi-heart-fill'); // 좋아요 상태로 변경
+                        icon.removeClass('bi-heart').addClass('bi-heart-fill');
                     } else {
-                        icon.removeClass('bi-heart-fill').addClass('bi-heart'); // 좋아요 취소 상태로 변경
+                        icon.removeClass('bi-heart-fill').addClass('bi-heart');
                     }
                 })
                 .catch(error => console.error('Error:', error));
