@@ -30,15 +30,6 @@ body {
 	padding: 2rem;
 }
 
-.main-content {
-	padding-top: 80px;
-	transition: margin-right 0.3s ease;
-}
-
-.main-content.video-active {
-	margin-right: 400px;
-}
-
 .row {
 	display: flex;
 	flex-wrap: wrap;
@@ -51,75 +42,57 @@ body {
 	min-width: 300px;
 }
 
-/* Video Section Styles */
-.video-section {
-	position: fixed;
-	right: -90vw;
-	top: 0;
-	bottom: 0;
-	width: 90vw;
-	background-color: white;
-	transition: transform 0.3s ease;
-	z-index: 999;
-	padding: 1.5rem;
-	margin-top: 80px;
-	margin-bottom: 20px;
-	box-shadow: -4px 0 15px rgba(0, 0, 0, 0.08);
-	overflow-y: auto;
-}
-
-.video-section.active {
-	transform: translateX(-90vw);
-}
-
-.video-preview {
+/* Video Container */
+.video-container {
 	background-color: white;
 	border-radius: 12px;
-	padding: 1rem;
-	margin-bottom: 2rem;
-	height: calc(100vh - 200px);
+	padding: 1.5rem;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+	position: relative;
 }
 
 .video-box {
-	display: block;
+	width: 100%;
+	height: 400px;
 	background-color: #f8f9fa;
 	border-radius: 8px;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
+	margin-bottom: 1rem;
+	position: relative;
 }
 
 #interviewVideo {
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
+	background-color: #000;
+	border-radius: 8px;
 }
 
-.video-close {
+.back-to-questions {
 	position: absolute;
-	top: 20px;
-	right: 20px;
-	background: none;
+	top: 1rem;
+	left: 1rem;
+	background-color: rgba(255, 255, 255, 0.9);
 	border: none;
-	font-size: 24px;
+	border-radius: 4px;
+	padding: 0.5rem 1rem;
 	cursor: pointer;
-	color: #4a5568;
-	width: 40px;
-	height: 40px;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	border-radius: 50%;
+	gap: 0.5rem;
 	transition: background-color 0.2s ease;
-	z-index: 1001;
+	z-index: 10;
+}
+
+.back-to-questions:hover {
+	background-color: rgba(255, 255, 255, 1);
 }
 
 /* Questions Section */
 .video-questions {
 	background-color: white;
 	border-radius: 12px;
-	padding: 1.5rem;
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+	transition: all 0.3s ease;
 }
 
 .section-title {
@@ -145,8 +118,8 @@ body {
 	transition: all 0.2s ease;
 	font-size: 0.95rem;
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
+	align-items: flex-start;
+	gap: 1rem;
 }
 
 .question-button:hover {
@@ -155,41 +128,14 @@ body {
 }
 
 .question-button.active {
-	margin-right: 90%;
 	background-color: #e2e8f0;
 	border-left: 4px solid #4a90e2;
-}
-
-.question-content {
-	flex-grow: 1;
 }
 
 .question-number {
 	font-weight: 600;
 	color: #4a5568;
 	margin-right: 0.5rem;
-}
-
-/* Video Button */
-.video-button {
-	background-color: #4a90e2;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	padding: 0.5rem;
-	margin-left: 1rem;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	transition: all 0.3s ease;
-}
-
-.video-button:hover {
-	background-color: #357abd;
-}
-
-.video-button i {
-	font-size: 1rem;
 }
 
 /* Answer Section */
@@ -215,15 +161,6 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-	.video-section {
-		width: 100%;
-		right: -100%;
-	}
-
-	.main-content.video-active {
-		margin-right: 0;
-	}
-
 	.row {
 		flex-direction: column;
 	}
@@ -232,15 +169,11 @@ body {
 		width: 100%;
 	}
 
-	.main-content {
-		padding-top: 60px;
-	}
-
 	.mypcontent {
 		padding: 50px 20px;
 	}
 
-	.question-button.active {
-		margin-right: 0;
+	.video-box {
+		height: 300px;
 	}
 }

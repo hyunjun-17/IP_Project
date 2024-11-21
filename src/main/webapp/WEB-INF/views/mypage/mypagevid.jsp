@@ -9,31 +9,12 @@
 <head>
     <%@ include file="../header.jsp" %>
     <title>My Page</title>
+    <meta name="selfIdx" content="${selfIdx}">
     <link rel="stylesheet" href="<c:url value='/resources/static/mypage/mypagevid.css'/>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 <jsp:include page="../navbar.jsp"/>
-<!-- Video Toggle Button -->
-<button class="video-toggle" aria-label="Toggle Video Section">
-    <i class="fas fa-video"></i>
-</button>
-
-
-<%-- 비디오 섹션 --%>
-<div class="video-section">
-    <h4 class="section-title">면접 영상</h4>
-    <button class="video-close" aria-label="Close Video Section">
-        <i class="fas fa-times"></i>
-    </button>
-    <div class="video-preview">
-        <div class="video-box">
-            <video id="interviewVideo" controls>
-                <source src="" type="video/webm">
-            </video>
-        </div>
-    </div>
-</div>
 
 <div class="main-content">
     <div class="row">
@@ -44,22 +25,33 @@
             <div class="mypcontent">
                 <h2 class="page-header">면접 영상 내역</h2>
                 <div class="row">
-                    <%-- 질문 목록 부분 수정 --%>
                     <div class="col-6">
-                        <div class="video-questions">
-                            <h4 class="section-title">면접 질문</h4>
-                            <c:forEach items="${ipros}" var="ipro" varStatus="status">
-                                <div class="question-item">
-                                    <button type="button"
-                                            class="question-button"
-                                            data-ipro-idx="${ipro.iproIdx}"
-                                            data-question-number="${status.index + 1}"
-                                            onclick="console.log('button ipro: ${ipro.iproIdx}')">
-                                        <span class="question-number">Q${status.index + 1}.</span>
-                                        <c:out value="${ipro.iproQuestion}"/>
-                                    </button>
-                                </div>
-                            </c:forEach>
+                        <div class="video-container">
+                            <!-- Video player -->
+                            <div class="video-box" style="display: none;">
+                                <video id="interviewVideo" controls>
+                                    <source src="" type="video/webm">
+                                </video>
+                                <button class="back-to-questions" aria-label="Back to Questions">
+                                    <i class="fas fa-arrow-left"></i> 질문 목록으로
+                                </button>
+                            </div>
+
+                            <!-- Questions section -->
+                            <div class="video-questions">
+                                <h4 class="section-title">면접 질문</h4>
+                                <c:forEach items="${ipros}" var="ipro" varStatus="status">
+                                    <div class="question-item">
+                                        <button type="button"
+                                                class="question-button"
+                                                data-ipro-idx="${ipro.iproIdx}"
+                                                data-question-number="${status.index + 1}">
+                                            <span class="question-number">Q${status.index + 1}.</span>
+                                            <c:out value="${ipro.iproQuestion}"/>
+                                        </button>
+                                    </div>
+                                </c:forEach>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -83,40 +75,24 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // DOM 요소
+        // DOM Elements
         const answerBoxes = document.querySelectorAll('.answer-box');
         const questionButtons = document.querySelectorAll('.video-questions .question-button');
-        const videoToggle = document.querySelector('.video-toggle');
-        const videoSection = document.querySelector('.video-section');
-        const mainContent = document.querySelector('.main-content');
-        const videoClose = document.querySelector('.video-close');
+        const videoBox = document.querySelector('.video-box');
+        const videoQuestions = document.querySelector('.video-questions');
         const video = document.getElementById('interviewVideo');
+        const backButton = document.querySelector('.back-to-questions');
 
-        // 상수
+        // Constants
         const s3BaseUrl = "https://iproproject.s3.ap-southeast-2.amazonaws.com/interviews/";
-        const selfIdx = ${selfIdx};
+        const selfIdx = document.querySelector('meta[name="selfIdx"]').content; // Add this meta tag in JSP
 
-        // 디버깅: 모든 버튼의 ipro_idx 확인
-        questionButtons.forEach((btn, index) => {
-            const iproIdx = btn.getAttribute('data-ipro-idx');
-            const questionNumber = btn.getAttribute('data-question-number');
-            console.log('Button data:', {
-                index: index,
-                iproIdx: iproIdx,
-                questionNumber: questionNumber,
-                buttonText: btn.textContent.trim()
-            });
-        });
-
-        // 비디오 로드 함수
-        // 비디오 로드 함수
+        /**
+         * Load and display video for the selected question
+         * @param {HTMLElement} button - The clicked question button
+         */
         function loadVideo(button) {
             const iproIdx = button.getAttribute('data-ipro-idx');
-            console.log('Load video triggered for:', {
-                iproIdx: iproIdx,
-                buttonHTML: button.outerHTML,
-                selfIdx: selfIdx
-            });
 
             if (!iproIdx) {
                 console.error('No iproIdx found for button', button);
@@ -124,119 +100,105 @@
             }
 
             try {
-                // URL 구성 수정 - 템플릿 리터럴에서 변수 참조 방식 변경
                 const videoUrl = s3BaseUrl + selfIdx + '_' + iproIdx + '.webm';
-                // 또는
-                // const videoUrl = `${s3BaseUrl}${selfIdx}_${iproIdx}.webm`;
-
                 console.log('Attempting to load video:', videoUrl);
 
-                // 비디오 소스 초기화 및 설정
+                // Remove previous error handler
+                video.removeEventListener('error', handleVideoError);
+
+                // Error handling function
+                function handleVideoError(e) {
+                    console.error('Video load failed:', {
+                        error: video.error,
+                        errorCode: video.error ? video.error.code : null,
+                        errorMessage: video.error ? video.error.message : null
+                    });
+                    showQuestions();
+                }
+
+                // Add new error handler
+                video.addEventListener('error', handleVideoError);
+
+                // Reset and load video
                 video.pause();
                 video.currentTime = 0;
                 video.src = videoUrl;
                 video.load();
 
-                // UI 업데이트
-                videoSection.classList.add('active');
-                mainContent.classList.add('video-active');
-                videoToggle.style.display = 'none';
+                // Handle successful video load
+                video.addEventListener('loadeddata', function onLoadedData() {
+                    showVideo();
+                    video.removeEventListener('loadeddata', onLoadedData);
+                });
 
-                // URL 확인용 로그
-                console.log('Final video URL:', video.src);
             } catch (error) {
-                console.error('Error loading video:', error);
+                console.error('Error in loadVideo:', error);
+                showQuestions();
             }
         }
 
-        // 질문 버튼 클릭 핸들러
+        /**
+         * Show video and hide questions
+         */
+        function showVideo() {
+            videoQuestions.style.display = 'none';
+            videoBox.style.display = 'block';
+            video.play();
+        }
+
+        /**
+         * Show questions and hide video
+         */
+        function showQuestions() {
+            videoBox.style.display = 'none';
+            videoQuestions.style.display = 'block';
+        }
+
+        /**
+         * Update answer display for selected question
+         * @param {string} questionNumber - The selected question number
+         */
+        function updateAnswerDisplay(questionNumber) {
+            answerBoxes.forEach(box => {
+                box.style.display = 'none';
+                if (box.getAttribute('data-question') === questionNumber) {
+                    box.style.display = 'block';
+                }
+            });
+        }
+
+        /**
+         * Update active question button state
+         * @param {HTMLElement} activeButton - The clicked button
+         */
+        function updateActiveQuestion(activeButton) {
+            questionButtons.forEach(btn => btn.classList.remove('active'));
+            activeButton.classList.add('active');
+        }
+
+        // Event Listeners
         questionButtons.forEach((button) => {
             button.addEventListener('click', function () {
-                const iproIdx = this.getAttribute('data-ipro-idx');
-                console.log('Button clicked - iproIdx:', iproIdx);
                 const questionNumber = this.getAttribute('data-question-number');
 
-                console.log('Button clicked:', {
-                    iproIdx: iproIdx,
-                    questionNumber: questionNumber,
-                    buttonText: this.textContent.trim(),
-                    buttonData: this.dataset
-                });
-
-                // 버튼 상태 업데이트
-                questionButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-
-                // 답변 업데이트
-                const answerBox = document.querySelector(`.answer-box[data-question="${questionNumber}"]`);
-                if (answerBox) {
-                    answerBoxes.forEach(box => box.classList.remove('active'));
-                    answerBox.classList.add('active');
-                }
-
-                // 비디오 로드
                 loadVideo(this);
+                updateAnswerDisplay(questionNumber);
+                updateActiveQuestion(this);
             });
         });
 
-        // 비디오 이벤트 핸들러들
-        video.addEventListener('error', function (e) {
-            const activeButton = document.querySelector('.question-button.active');
-            console.error('Video error details:', {
-                error: video.error,
-                errorCode: video.error ? video.error.code : null,
-                errorMessage: video.error ? video.error.message : null,
-                currentSrc: video.currentSrc,
-                activeButtonIproIdx: activeButton?.getAttribute('data-ipro-idx'),
-                networkState: video.networkState,
-                readyState: video.readyState
-            });
-        });
-
-        video.addEventListener('loadeddata', function () {
-            console.log('Video loaded successfully:', {
-                src: video.currentSrc,
-                duration: video.duration,
-                readyState: video.readyState
-            });
-        });
-
-        // 비디오 섹션 컨트롤러
-        videoToggle.addEventListener('click', function () {
-            videoSection.classList.add('active');
-            mainContent.classList.add('video-active');
-            this.style.display = 'none';
-        });
-
-        videoClose.addEventListener('click', function () {
-            videoSection.classList.remove('active');
-            mainContent.classList.remove('video-active');
-            videoToggle.style.display = 'flex';
+        backButton.addEventListener('click', function() {
             video.pause();
+            showQuestions();
         });
 
-        // 초기 상태 설정
-        if (questionButtons.length > 0) {
-            console.log('Setting up initial state');
-            const firstButton = questionButtons[0];
-            const firstIproIdx = firstButton.getAttribute('data-ipro-idx');
-
-            if (firstIproIdx) {
-                console.log('First button data:', {
-                    iproIdx: firstIproIdx,
-                    questionNumber: firstButton.getAttribute('data-question-number')
-                });
-            }
-        }
+        // Initialize
+        showQuestions();
     });
 
-
+    // Edit answer functionality (to be implemented)
     function editAnswer() {
-
-    }
-
-    function saveAnswer() {
-
+        // Implementation for edit functionality
     }
 </script>
 </body>
