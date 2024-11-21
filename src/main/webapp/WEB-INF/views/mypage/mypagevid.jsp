@@ -54,7 +54,7 @@
                                             class="question-button"
                                             data-ipro-idx="${ipro.iproIdx}"
                                             data-question-number="${status.index + 1}"
-                                            onclick="console.log('button ipro:', ${ipro.iproIdx})"> <!-- 디버깅용 -->
+                                            onclick="console.log('button ipro: ${ipro.iproIdx}')">
                                         <span class="question-number">Q${status.index + 1}.</span>
                                         <c:out value="${ipro.iproQuestion}"/>
                                     </button>
@@ -96,68 +96,82 @@
         const s3BaseUrl = "https://iproproject.s3.ap-southeast-2.amazonaws.com/interviews/";
         const selfIdx = ${selfIdx};
 
-        // 디버깅: 버튼 데이터 체크
+        // 디버깅: 모든 버튼의 ipro_idx 확인
         questionButtons.forEach((btn, index) => {
-            console.log('Button check:', {
+            const iproIdx = btn.getAttribute('data-ipro-idx');
+            const questionNumber = btn.getAttribute('data-question-number');
+            console.log('Button data:', {
                 index: index,
-                iproIdx: btn.getAttribute('data-ipro-idx'),
-                html: btn.outerHTML
+                iproIdx: iproIdx,
+                questionNumber: questionNumber,
+                buttonText: btn.textContent.trim()
             });
         });
 
         // 비디오 로드 함수
+        // 비디오 로드 함수
         function loadVideo(button) {
             const iproIdx = button.getAttribute('data-ipro-idx');
-
-            console.log('Loading video for:', {
-                button: button,
+            console.log('Load video triggered for:', {
                 iproIdx: iproIdx,
+                buttonHTML: button.outerHTML,
                 selfIdx: selfIdx
             });
 
             if (!iproIdx) {
-                console.error('No iproIdx found for button');
+                console.error('No iproIdx found for button', button);
                 return;
             }
 
-            const videoUrl = `${s3BaseUrl}${selfIdx}_${iproIdx}.webm`;
-            console.log('Loading video URL:', videoUrl);
+            try {
+                // URL 구성 수정 - 템플릿 리터럴에서 변수 참조 방식 변경
+                const videoUrl = s3BaseUrl + selfIdx + '_' + iproIdx + '.webm';
+                // 또는
+                // const videoUrl = `${s3BaseUrl}${selfIdx}_${iproIdx}.webm`;
 
-            video.src = videoUrl;
-            video.load();
+                console.log('Attempting to load video:', videoUrl);
 
-            videoSection.classList.add('active');
-            mainContent.classList.add('video-active');
-            videoToggle.style.display = 'none';
+                // 비디오 소스 초기화 및 설정
+                video.pause();
+                video.currentTime = 0;
+                video.src = videoUrl;
+                video.load();
+
+                // UI 업데이트
+                videoSection.classList.add('active');
+                mainContent.classList.add('video-active');
+                videoToggle.style.display = 'none';
+
+                // URL 확인용 로그
+                console.log('Final video URL:', video.src);
+            } catch (error) {
+                console.error('Error loading video:', error);
+            }
         }
 
         // 질문 버튼 클릭 핸들러
-        questionButtons.forEach(button => {
-            button.addEventListener('click', function (e) {
-                // 기존 활성화된 버튼 비활성화
-                questionButtons.forEach(btn => btn.classList.remove('active'));
+        questionButtons.forEach((button) => {
+            button.addEventListener('click', function () {
+                const iproIdx = this.getAttribute('data-ipro-idx');
+                console.log('Button clicked - iproIdx:', iproIdx);
+                const questionNumber = this.getAttribute('data-question-number');
 
-                // 현재 버튼 활성화
+                console.log('Button clicked:', {
+                    iproIdx: iproIdx,
+                    questionNumber: questionNumber,
+                    buttonText: this.textContent.trim(),
+                    buttonData: this.dataset
+                });
+
+                // 버튼 상태 업데이트
+                questionButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
 
                 // 답변 업데이트
-                const questionNumber = parseInt(this.getAttribute('data-question-number'));
                 const answerBox = document.querySelector(`.answer-box[data-question="${questionNumber}"]`);
-
-                console.log('Updating answer:', {
-                    questionNumber: questionNumber,
-                    answerBoxFound: !!answerBox,
-                    answerBoxes: Array.from(document.querySelectorAll('.answer-box')).map(box => ({
-                        question: box.getAttribute('data-question'),
-                        content: box.textContent
-                    }))
-                });
-
                 if (answerBox) {
                     answerBoxes.forEach(box => box.classList.remove('active'));
                     answerBox.classList.add('active');
-                } else {
-                    console.error('Answer box not found for question:', questionNumber);
                 }
 
                 // 비디오 로드
@@ -165,17 +179,29 @@
             });
         });
 
-        // 비디오 에러 핸들링
+        // 비디오 이벤트 핸들러들
         video.addEventListener('error', function (e) {
             const activeButton = document.querySelector('.question-button.active');
-            console.error('Video error:', {
+            console.error('Video error details:', {
                 error: video.error,
+                errorCode: video.error ? video.error.code : null,
+                errorMessage: video.error ? video.error.message : null,
                 currentSrc: video.currentSrc,
-                activeButtonIproIdx: activeButton?.getAttribute('data-ipro-idx')
+                activeButtonIproIdx: activeButton?.getAttribute('data-ipro-idx'),
+                networkState: video.networkState,
+                readyState: video.readyState
             });
         });
 
-        // 비디오 섹션 컨트롤
+        video.addEventListener('loadeddata', function () {
+            console.log('Video loaded successfully:', {
+                src: video.currentSrc,
+                duration: video.duration,
+                readyState: video.readyState
+            });
+        });
+
+        // 비디오 섹션 컨트롤러
         videoToggle.addEventListener('click', function () {
             videoSection.classList.add('active');
             mainContent.classList.add('video-active');
@@ -188,41 +214,21 @@
             videoToggle.style.display = 'flex';
             video.pause();
         });
-    });
 
-    // 비디오 이벤트 핸들러
-    video.addEventListener('error', function (e) {
-        const activeButton = document.querySelector('.question-button.active');
-        console.error('Video error:', {
-            error: video.error,
-            currentSrc: video.currentSrc,
-            activeButtonIproIdx: activeButton?.getAttribute('data-ipro-idx'),
-            networkState: video.networkState,
-            readyState: video.readyState
-        });
-    });
+        // 초기 상태 설정
+        if (questionButtons.length > 0) {
+            console.log('Setting up initial state');
+            const firstButton = questionButtons[0];
+            const firstIproIdx = firstButton.getAttribute('data-ipro-idx');
 
-    video.addEventListener('loadeddata', function () {
-        console.log('Video loaded successfully:', {
-            src: video.currentSrc,
-            duration: video.duration,
-            readyState: video.readyState
-        });
-    });
-
-    // 초기 상태 설정
-    if (questionButtons.length > 0) {
-        console.log('Setting up initial state');
-        const firstButton = questionButtons[0];
-        const firstIproIdx = firstButton.getAttribute('data-ipro-idx');
-
-        if (firstIproIdx) {
-            console.log('First button data:', {
-                iproIdx: firstIproIdx,
-                questionNumber: firstButton.getAttribute('data-question-number')
-            });
+            if (firstIproIdx) {
+                console.log('First button data:', {
+                    iproIdx: firstIproIdx,
+                    questionNumber: firstButton.getAttribute('data-question-number')
+                });
+            }
         }
-    }
+    });
 
 
     function editAnswer() {
