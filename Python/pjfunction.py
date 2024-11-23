@@ -4,7 +4,7 @@ from langchain_pinecone import PineconeVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain import hub
 
-def get_llm(model='gpt-4-turbo'):
+def get_llm(model='gpt-4o'):
     llm = ChatOpenAI()
     return llm
 

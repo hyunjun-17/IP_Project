@@ -210,11 +210,33 @@ body {
   border-radius: 8px;
 }
 
+.btn-record.start:hover {
+  background: rgb(62, 129, 179);
+}
+
+.btn-record.start:disabled {
+  pointer-events: none; /* 마우스 이벤트 비활성화 */
+  background-color: #ccc; /* 비활성화 상태 배경색 */
+  color: #666; /* 비활성화 상태 텍스트 색상 */
+  cursor: not-allowed; /* 커서 변경 */
+}
+
 .btn-record.stop {
   background: #f14b4b;
   color: white;
   border:none;
   border-radius: 8px;
+}
+
+.btn-record.stop:disabled {
+  pointer-events: none; /* 마우스 이벤트 비활성화 */
+  background-color: #ccc; /* 비활성화 상태 배경색 */
+  color: #666; /* 비활성화 상태 텍스트 색상 */
+  cursor: not-allowed; /* 커서 변경 */
+}
+
+.btn-record.stop:hover{
+  background: #bc3b3b;
 }
 
 /* Transcript Section */
