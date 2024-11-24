@@ -22,7 +22,7 @@
     <p class="lead">나의 자기소개서를 기반으로 지원 기업 맞춤 면접 준비를 도와줘요</p>
 </div>
 <div class="content">
-    <h4 class="h-title"> 2. 질문 답변하기 </h4>
+    <h4 class="h-title"> 3. 질문 답변하기 </h4>
 
     <p><h5>기업질문 > 직무질문 > 경험질문</h5></p>
     <hr style="width:100%; margin:0">
